@@ -1,0 +1,92 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: ticketing-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-ticketing_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-isp_ticketing}
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    networks:
+      - ticketing-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-ticketing_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: ticketing-redis
+    restart: always
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - ./data/redis:/data
+    networks:
+      - ticketing-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: node:18-alpine
+    container_name: ticketing-backend
+    restart: always
+    working_dir: /app
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3001
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-isp_ticketing}
+      DB_USER: ${DB_USER:-ticketing_user}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRY: ${JWT_EXPIRY:-15m}
+      FILE_STORAGE_PATH: /app/uploads
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:9000}
+    volumes:
+      - ./backend/dist:/app/dist
+      - ./backend/node_modules:/app/node_modules
+      - ./data/uploads:/app/uploads
+      - ./data/logs:/app/logs
+    ports:
+      - "9001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ticketing-network
+    command: ["node", "dist/app.js"]
+
+  frontend:
+    image: nginx:alpine
+    container_name: ticketing-frontend
+    restart: always
+    volumes:
+      - ./frontend/index.html:/usr/share/nginx/html/index.html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "9000:80"
+    depends_on:
+      - backend
+    networks:
+      - ticketing-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  ticketing-network:
+    driver: bridge

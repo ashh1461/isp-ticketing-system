@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ISP Ticketing System</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+      background: #f5f7fa;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* Navigation */
+    nav {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 15px 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    nav h1 {
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    nav button {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid white;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    nav button:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Main Layout */
+    .layout {
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      gap: 20px;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      height: fit-content;
+    }
+
+    .sidebar h3 {
+      margin-bottom: 15px;
+      color: #667eea;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .sidebar a {
+      display: block;
+      padding: 10px 15px;
+      color: #333;
+      text-decoration: none;
+      border-radius: 4px;
+      margin-bottom: 5px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .sidebar a:hover,
+    .sidebar a.active {
+      background: #667eea;
+      color: white;
+    }
+
+    /* Content Area */
+    .content {
+      background: white;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .content h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    /* Forms */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    /* Buttons */
+    button,
+    .btn {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    button:hover,
+    .btn:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+    }
+
+    .btn-secondary:hover {
+      background: #5a6268;
+    }
+
+    .btn-danger {
+      background: #dc3545;
+    }
+
+    .btn-danger:hover {
+      background: #c82333;
+    }
+
+    .btn-success {
+      background: #28a745;
+    }
+
+    .btn-success:hover {
+      background: #218838;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th {
+      background: #f8f9fa;
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 2px solid #ddd;
+      color: #333;
+    }
+
+    td {
+      padding: 12px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    tr:hover {
+      background: #f8f9fa;
+    }
+
+    /* Status badges */
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .badge-success {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .badge-warning {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .badge-danger {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .badge-info {
+      background: #d1ecf1;
+      color: #0c5460;
+    }
+
+    /* Cards */
+    .card {
+      background: #f8f9fa;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .card-header {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    /* Alerts */
+    .alert {
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+
+    .alert-success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .alert-danger {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .alert-warning {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeaa7;
+    }
+
+    .alert-info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+
+    /* Grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .grid-item {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .grid-item h3 {
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .grid-item p {
+      font-size: 12px;
+      opacity: 0.9;
+      margin-top: 5px;
+    }
+
+    /* Modals */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 8px;
+      padding: 30px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #999;
+    }
+
+    .modal-close:hover {
+      color: #333;
+    }
+
+    .hide {
+      display: none;
+    }
+
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .error-text {
+      color: #dc3545;
+      font-size: 12px;
+      margin-top: 5px;
+    }
+
+    .success-text {
+      color: #28a745;
+      font-size: 12px;
+      margin-top: 5px;
+    }
+
+    @media (max-width: 768px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      nav {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav>
+    <h1>🎫 ISP Ticketing System</h1>
+    <div>
+      <span id="userDisplay"></span>
+      <button onclick="logout()" style="margin-left: 10px;">Logout</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <!-- Login Page -->
+    <div id="loginPage">
+      <div style="max-width: 400px; margin: 100px auto;">
+        <div class="content">
+          <h2>Login</h2>
+          <div id="loginError" class="alert alert-danger hide"></div>
+          
+          <form onsubmit="handleLogin(event)">
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" id="loginEmail" required>
+            </div>
+
+            <div class="form-group">
+              <label>Password</label>
+              <input type="password" id="loginPassword" required>
+            </div>
+
+            <button type="submit" style="width: 100%;">Login</button>
+          </form>
+
+          <p style="margin-top: 20px; text-align: center;">
+            Don't have an account? <a href="#" onclick="showRegister()">Register here</a>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Register Page -->
+    <div id="registerPage" class="hide">
+      <div style="max-width: 400px; margin: 50px auto;">
+        <div class="content">
+          <h2>Register New User</h2>
+          <div id="registerError" class="alert alert-danger hide"></div>
+
+          <form onsubmit="handleRegister(event)">
+            <div class="form-group">
+              <label>First Name</label>
+              <input type="text" id="regFirstName" required>
+            </div>
+
+            <div class="form-group">
+              <label>Last Name</label>
+              <input type="text" id="regLastName" required>
+            </div>
+
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" id="regEmail" required>
+            </div>
+
+            <div class="form-group">
+              <label>Password</label>
+              <input type="password" id="regPassword" required>
+            </div>
+
+            <div class="form-group">
+              <label>Role</label>
+              <select id="regRole">
+                <option value="specialist">Specialist</option>
+                <option value="team_lead">Team Lead</option>
+                <option value="engineer">Engineer</option>
+              </select>
+            </div>
+
+            <button type="submit" style="width: 100%;">Register</button>
+          </form>
+
+          <p style="margin-top: 20px; text-align: center;">
+            Already have an account? <a href="#" onclick="showLogin()">Login here</a>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main App (After Login) -->
+    <div id="mainApp" class="hide">
+      <div class="layout">
+        <!-- Sidebar -->
+        <div class="sidebar">
+          <h3>Menu</h3>
+          <a class="active" onclick="showDashboard()">📊 Dashboard</a>
+          <a onclick="showTickets()">🎫 Tickets</a>
+          <a onclick="showCreateTicket()">➕ Create Ticket</a>
+          <a onclick="showCustomers()">👥 Customers</a>
+          <a onclick="showUsers()">👨‍💼 Users</a>
+          <a onclick="showCreateCustomer()">➕ New Customer</a>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+          <!-- Dashboard -->
+          <div id="dashboard">
+            <h2>Dashboard</h2>
+            <div id="dashboardError" class="alert alert-danger hide"></div>
+            <div id="dashboardContent">
+              <div class="loading"></div> Loading...
+            </div>
+          </div>
+
+          <!-- Tickets -->
+          <div id="ticketsPage" class="hide">
+            <h2>Tickets</h2>
+            <div id="ticketsError" class="alert alert-danger hide"></div>
+            <div id="ticketsContent">
+              <div class="loading"></div> Loading...
+            </div>
+          </div>
+
+          <!-- Create Ticket -->
+          <div id="createTicketPage" class="hide">
+            <h2>Create New Ticket</h2>
+            <div id="createTicketError" class="alert alert-danger hide"></div>
+            <div id="createTicketSuccess" class="alert alert-success hide"></div>
+
+            <form onsubmit="handleCreateTicket(event)">
+              <div class="form-group">
+                <label>Customer *</label>
+                <select id="ticketCustomer" required>
+                  <option value="">Select Customer</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Title *</label>
+                <input type="text" id="ticketTitle" placeholder="Brief description" required>
+              </div>
+
+              <div class="form-group">
+                <label>Description *</label>
+                <textarea id="ticketDescription" placeholder="Detailed description" required></textarea>
+              </div>
+
+              <div class="form-group">
+                <label>Priority</label>
+                <select id="ticketPriority">
+                  <option value="low">Low</option>
+                  <option value="medium" selected>Medium</option>
+                  <option value="high">High</option>
+                  <option value="critical">Critical</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Assign To</label>
+                <select id="ticketAssignedTo">
+                  <option value="">No Assignment</option>
+                </select>
+              </div>
+
+              <button type="submit" class="btn-success">Create Ticket</button>
+            </form>
+          </div>
+
+          <!-- Customers -->
+          <div id="customersPage" class="hide">
+            <h2>Customers</h2>
+            <div id="customersError" class="alert alert-danger hide"></div>
+            <div id="customersContent">
+              <div class="loading"></div> Loading...
+            </div>
+          </div>
+
+          <!-- Create Customer -->
+          <div id="createCustomerPage" class="hide">
+            <h2>Create New Customer</h2>
+            <div id="createCustomerError" class="alert alert-danger hide"></div>
+            <div id="createCustomerSuccess" class="alert alert-success hide"></div>
+
+            <form onsubmit="handleCreateCustomer(event)">
+              <div class="form-group">
+                <label>Account Number *</label>
+                <input type="text" id="customerAccount" placeholder="e.g., ACC-12345" required>
+              </div>
+
+              <div class="form-group">
+                <label>First Name *</label>
+                <input type="text" id="customerFirstName" required>
+              </div>
+
+              <div class="form-group">
+                <label>Last Name *</label>
+                <input type="text" id="customerLastName" required>
+              </div>
+
+              <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="customerEmail">
+              </div>
+
+              <div class="form-group">
+                <label>Account Type</label>
+                <select id="customerAccountType">
+                  <option value="shared_internet">Shared Internet</option>
+                  <option value="dedicated">Dedicated</option>
+                </select>
+              </div>
+
+              <button type="submit" class="btn-success">Create Customer</button>
+            </form>
+          </div>
+
+          <!-- Users -->
+          <div id="usersPage" class="hide">
+            <h2>Users</h2>
+            <div id="usersError" class="alert alert-danger hide"></div>
+            <div id="usersContent">
+              <div class="loading"></div> Loading...
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Configuration
+    const API_URL = '/api/v1';
+    let token = localStorage.getItem('token');
+    let currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+
+    // Initialize
+    if (token) {
+      showMainApp();
+    } else {
+      showLogin();
+    }
+
+    // Authentication
+    async function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+
+      try {
+        const response = await fetch(`${API_URL}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          token = data.token;
+          currentUser = data.user;
+          localStorage.setItem('token', token);
+          localStorage.setItem('user', JSON.stringify(currentUser));
+          showMainApp();
+        } else {
+          showError('loginError', data.error || 'Login failed');
+        }
+      } catch (error) {
+        showError('loginError', error.message);
+      }
+    }
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      const first_name = document.getElementById('regFirstName').value;
+      const last_name = document.getElementById('regLastName').value;
+      const email = document.getElementById('regEmail').value;
+      const password = document.getElementById('regPassword').value;
+      const role = document.getElementById('regRole').value;
+
+      try {
+        const response = await fetch(`${API_URL}/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, first_name, last_name, role }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          token = data.token;
+          currentUser = data.user;
+          localStorage.setItem('token', token);
+          localStorage.setItem('user', JSON.stringify(currentUser));
+          showMainApp();
+        } else {
+          showError('registerError', data.error || 'Registration failed');
+        }
+      } catch (error) {
+        showError('registerError', error.message);
+      }
+    }
+
+    function logout() {
+      token = null;
+      currentUser = {};
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      showLogin();
+    }
+
+    // API Calls
+    async function apiCall(endpoint, options = {}) {
+      const headers = {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` }),
+      };
+
+      const response = await fetch(`${API_URL}${endpoint}`, {
+        ...options,
+        headers: { ...headers, ...options.headers },
+      });
+
+      return response.json();
+    }
+
+    // Page Navigation
+    function showLogin() {
+      document.getElementById('loginPage').style.display = '';
+      document.getElementById('registerPage').classList.add('hide');
+      document.getElementById('mainApp').classList.add('hide');
+      document.querySelector('nav').style.display = 'none';
+    }
+
+    function showRegister() {
+      document.getElementById('loginPage').classList.add('hide');
+      document.getElementById('registerPage').classList.remove('hide');
+      document.getElementById('mainApp').classList.add('hide');
+      document.querySelector('nav').style.display = 'none';
+    }
+
+    function showMainApp() {
+      document.getElementById('loginPage').classList.add('hide');
+      document.getElementById('registerPage').classList.add('hide');
+      document.getElementById('mainApp').classList.remove('hide');
+      document.querySelector('nav').style.display = 'flex';
+      document.getElementById('userDisplay').textContent = `${currentUser.first_name} ${currentUser.last_name}`;
+      showDashboard();
+    }
+
+    function showDashboard() {
+      hideAllPages();
+      document.getElementById('dashboard').classList.remove('hide');
+      loadDashboard();
+    }
+
+    function showTickets() {
+      hideAllPages();
+      document.getElementById('ticketsPage').classList.remove('hide');
+      loadTickets();
+    }
+
+    function showCreateTicket() {
+      hideAllPages();
+      document.getElementById('createTicketPage').classList.remove('hide');
+      loadCustomersForDropdown();
+      loadUsersForDropdown();
+    }
+
+    function showCustomers() {
+      hideAllPages();
+      document.getElementById('customersPage').classList.remove('hide');
+      loadCustomers();
+    }
+
+    function showCreateCustomer() {
+      hideAllPages();
+      document.getElementById('createCustomerPage').classList.remove('hide');
+    }
+
+    function showUsers() {
+      hideAllPages();
+      document.getElementById('usersPage').classList.remove('hide');
+      loadUsers();
+    }
+
+    function hideAllPages() {
+      document.getElementById('dashboard').classList.add('hide');
+      document.getElementById('ticketsPage').classList.add('hide');
+      document.getElementById('createTicketPage').classList.add('hide');
+      document.getElementById('customersPage').classList.add('hide');
+      document.getElementById('createCustomerPage').classList.add('hide');
+      document.getElementById('usersPage').classList.add('hide');
+    }
+
+    // Loading Functions
+    async function loadDashboard() {
+      try {
+        const data = await apiCall('/analytics/dashboard');
+        if (data.summary) {
+          document.getElementById('dashboardContent').innerHTML = `
+            <div class="grid">
+              <div class="grid-item">
+                <h3>${data.summary.total_tickets}</h3>
+                <p>Total Tickets</p>
+              </div>
+              <div class="grid-item">
+                <h3>${data.summary.open_tickets}</h3>
+                <p>Open Tickets</p>
+              </div>
+              <div class="grid-item">
+                <h3>${data.summary.closed_tickets}</h3>
+                <p>Closed Tickets</p>
+              </div>
+              <div class="grid-item">
+                <h3>${data.summary.total_customers}</h3>
+                <p>Total Customers</p>
+              </div>
+              <div class="grid-item">
+                <h3>${data.summary.total_users}</h3>
+                <p>Total Users</p>
+              </div>
+            </div>
+
+            <h3 style="margin-top: 30px;">By Status</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>Count</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${Object.entries(data.by_status).map(([status, count]) => `
+                  <tr>
+                    <td>${status}</td>
+                    <td>${count}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+        }
+      } catch (error) {
+        showError('dashboardError', error.message);
+      }
+    }
+
+    async function loadTickets() {
+      try {
+        const data = await apiCall('/tickets');
+        if (data.tickets) {
+          document.getElementById('ticketsContent').innerHTML = `
+            <table>
+              <thead>
+                <tr>
+                  <th>Ticket #</th>
+                  <th>Title</th>
+                  <th>Priority</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${data.tickets.map(ticket => `
+                  <tr>
+                    <td><strong>${ticket.ticket_number}</strong></td>
+                    <td>${ticket.title}</td>
+                    <td><span class="badge ${ticket.priority === 'critical' ? 'badge-danger' : ticket.priority === 'high' ? 'badge-warning' : 'badge-info'}">${ticket.priority}</span></td>
+                    <td><span class="badge ${ticket.status === 'closed' ? 'badge-success' : 'badge-warning'}">${ticket.status}</span></td>
+                    <td>${new Date(ticket.created_at).toLocaleDateString()}</td>
+                    <td><button class="btn-danger" style="padding: 4px 12px; font-size: 12px;" onclick="deleteTicket('${ticket.id}')">Delete</button></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+        }
+      } catch (error) {
+        showError('ticketsError', error.message);
+      }
+    }
+
+    async function loadCustomersForDropdown() {
+      try {
+        const data = await apiCall('/customers');
+        const select = document.getElementById('ticketCustomer');
+        select.innerHTML = '<option value="">Select Customer</option>' + 
+          data.customers.map(c => `<option value="${c.id}">${c.first_name} ${c.last_name}</option>`).join('');
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    async function loadUsersForDropdown() {
+      try {
+        const data = await apiCall('/users');
+        const select = document.getElementById('ticketAssignedTo');
+        select.innerHTML = '<option value="">No Assignment</option>' + 
+          data.users.map(u => `<option value="${u.id}">${u.first_name} ${u.last_name}</option>`).join('');
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    async function loadCustomers() {
+      try {
+        const data = await apiCall('/customers');
+        if (data.customers) {
+          document.getElementById('customersContent').innerHTML = `
+            <table>
+              <thead>
+                <tr>
+                  <th>Account #</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Type</th>
+                  <th>Joined</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${data.customers.map(customer => `
+                  <tr>
+                    <td><strong>${customer.account_number}</strong></td>
+                    <td>${customer.first_name} ${customer.last_name}</td>
+                    <td>${customer.email || '-'}</td>
+                    <td>${customer.account_type}</td>
+                    <td>${new Date(customer.created_at).toLocaleDateString()}</td>
+                    <td><button class="btn-danger" style="padding: 4px 12px; font-size: 12px;" onclick="deleteCustomer('${customer.id}')">Delete</button></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+        }
+      } catch (error) {
+        showError('customersError', error.message);
+      }
+    }
+
+    async function loadUsers() {
+      try {
+        const data = await apiCall('/users');
+        if (data.users) {
+          document.getElementById('usersContent').innerHTML = `
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Joined</th>
+                  ${currentUser.role === 'admin' ? '<th>Actions</th>' : ''}
+                </tr>
+              </thead>
+              <tbody>
+                ${data.users.map(user => `
+                  <tr>
+                    <td>${user.first_name} ${user.last_name}</td>
+                    <td>${user.email}</td>
+                    <td><span class="badge badge-info">${user.role}</span></td>
+                    <td>${user.is_active ? '✅ Active' : '❌ Inactive'}</td>
+                    <td>${new Date(user.created_at).toLocaleDateString()}</td>
+                    ${currentUser.role === 'admin' ? `<td><button class="btn-danger" style="padding: 4px 12px; font-size: 12px;" onclick="deleteUser('${user.id}')">Delete</button></td>` : ''}
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+        }
+      } catch (error) {
+        showError('usersError', error.message);
+      }
+    }
+
+    // Delete Handlers
+    async function deleteTicket(id) {
+      if (!confirm('Are you sure you want to delete this ticket?')) return;
+
+      try {
+        const response = await fetch(`${API_URL}/tickets/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+
+        if (response.ok) {
+          loadTickets();
+        } else {
+          const data = await response.json().catch(() => ({}));
+          showError('ticketsError', data.error || 'Failed to delete ticket');
+        }
+      } catch (error) {
+        showError('ticketsError', error.message);
+      }
+    }
+
+    async function deleteCustomer(id) {
+      if (!confirm('Are you sure you want to delete this customer? Ticket data will be removed.')) return;
+
+      try {
+        const response = await fetch(`${API_URL}/customers/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+
+        if (response.ok) {
+          loadCustomers();
+        } else if (response.status === 409) {
+          const data = await response.json().catch(() => ({}));
+          const errMsg = data.error || 'Customer has existing tickets';
+          alert(errMsg);
+          const count = (errMsg.match(/(\d+)/) || [])[1];
+          if (confirm(`Force delete? This removes ${count || 'all'} tickets too.`)) {
+            await deleteCustomerForce(id);
+          }
+        } else {
+          const data = await response.json().catch(() => ({}));
+          showError('customersError', data.error || 'Failed to delete customer');
+        }
+      } catch (error) {
+        showError('customersError', error.message);
+      }
+    }
+
+    async function deleteCustomerForce(id) {
+      try {
+        const response = await fetch(`${API_URL}/customers/${id}?force=true`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+
+        if (response.ok) {
+          loadCustomers();
+        } else {
+          const data = await response.json().catch(() => ({}));
+          showError('customersError', data.error || 'Failed to delete customer');
+        }
+      } catch (error) {
+        showError('customersError', error.message);
+      }
+    }
+
+    async function deleteUser(id) {
+      if (!confirm('Are you sure you want to delete this user?')) return;
+
+      try {
+        const response = await fetch(`${API_URL}/users/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+
+        if (response.ok) {
+          loadUsers();
+        } else {
+          const data = await response.json().catch(() => ({}));
+          showError('usersError', data.error || 'Failed to delete user');
+        }
+      } catch (error) {
+        showError('usersError', error.message);
+      }
+    }
+
+    // Form Handlers
+    async function handleCreateTicket(e) {
+      e.preventDefault();
+      const customer_id = document.getElementById('ticketCustomer').value;
+      const title = document.getElementById('ticketTitle').value;
+      const description = document.getElementById('ticketDescription').value;
+      const priority = document.getElementById('ticketPriority').value;
+      const assigned_to_user_id = document.getElementById('ticketAssignedTo').value || null;
+
+      try {
+        const response = await fetch(`${API_URL}/tickets`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ customer_id, title, description, priority, assigned_to_user_id }),
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+          showSuccess('createTicketSuccess', 'Ticket created successfully! Ticket #: ' + data.ticket.ticket_number);
+          document.querySelector('form').reset();
+          setTimeout(() => showTickets(), 2000);
+        } else {
+          showError('createTicketError', data.error || 'Failed to create ticket');
+        }
+      } catch (error) {
+        showError('createTicketError', error.message);
+      }
+    }
+
+    async function handleCreateCustomer(e) {
+      e.preventDefault();
+      const account_number = document.getElementById('customerAccount').value;
+      const first_name = document.getElementById('customerFirstName').value;
+      const last_name = document.getElementById('customerLastName').value;
+      const email = document.getElementById('customerEmail').value;
+      const account_type = document.getElementById('customerAccountType').value;
+
+      try {
+        const response = await fetch(`${API_URL}/customers`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ account_number, first_name, last_name, email, account_type }),
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+          showSuccess('createCustomerSuccess', 'Customer created successfully!');
+          document.querySelector('#createCustomerPage form').reset();
+          setTimeout(() => showCustomers(), 2000);
+        } else {
+          showError('createCustomerError', data.error || 'Failed to create customer');
+        }
+      } catch (error) {
+        showError('createCustomerError', error.message);
+      }
+    }
+
+    // Utilities
+    function showError(elementId, message) {
+      const element = document.getElementById(elementId);
+      element.textContent = message;
+      element.classList.remove('hide');
+      setTimeout(() => element.classList.add('hide'), 5000);
+    }
+
+    function showSuccess(elementId, message) {
+      const element = document.getElementById(elementId);
+      element.textContent = message;
+      element.classList.remove('hide');
+      setTimeout(() => element.classList.add('hide'), 5000);
+    }
+  </script>
+</body>
+</html>

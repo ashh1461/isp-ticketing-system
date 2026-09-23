@@ -1,0 +1,2147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- API base: used only when this page is NOT served by the API host itself.
+       Relative values ("/api/v1" or same-origin) resolve against window.location.origin. -->
+  <meta name="api-base" content="http://10.227.227.35:9001">
+  <title>ISP Ticketing System</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary: #4f46e5;
+      --primary-dark: #4338ca;
+      --primary-light: #eef2ff;
+      --gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      --bg: #f1f5f9;
+      --surface: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --sidebar-bg: #0f172a;
+      --sidebar-hover: #1e293b;
+      --success: #16a34a;
+      --success-bg: #dcfce7;
+      --warning: #d97706;
+      --warning-bg: #fef3c7;
+      --danger: #dc2626;
+      --danger-bg: #fee2e2;
+      --info: #0891b2;
+      --info-bg: #cffafe;
+      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+      --shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+      --shadow-lg: 0 20px 60px rgba(15, 23, 42, 0.25);
+      --radius: 10px;
+      --sidebar-w: 250px;
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Helvetica Neue', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ============================ LOGIN ============================ */
+    #loginPage {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--gradient);
+      padding: 20px;
+    }
+
+    .login-card {
+      background: var(--surface);
+      border-radius: 16px;
+      box-shadow: var(--shadow-lg);
+      width: 100%;
+      max-width: 420px;
+      padding: 40px;
+    }
+
+    .login-logo {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 20px;
+      border-radius: 16px;
+      background: var(--gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+    }
+
+    .login-card h1 {
+      font-size: 22px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    .login-card .subtitle {
+      text-align: center;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+      font-size: 13px;
+    }
+
+    /* ============================ APP SHELL ============================ */
+    #mainApp { display: none; min-height: 100vh; }
+    #mainApp.active { display: block; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 60;
+      height: 64px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 24px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .topbar-toggle {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text);
+      font-size: 18px;
+      padding: 0;
+      transition: background 0.15s;
+    }
+    .topbar-toggle:hover { background: var(--primary-light); transform: none; box-shadow: none; }
+
+    .topbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 17px;
+      font-weight: 700;
+    }
+    .topbar-brand .brand-mark {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: var(--gradient); color: #fff;
+      display: flex; align-items: center; justify-content: center; font-size: 16px;
+    }
+
+    .topbar-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .user-chip { display: flex; align-items: center; gap: 10px; }
+
+    .user-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--gradient); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 13px; flex-shrink: 0;
+    }
+
+    .user-meta { line-height: 1.2; }
+    .user-meta .name { font-weight: 600; font-size: 13px; }
+    .user-meta .role { font-size: 11px; color: var(--text-muted); text-transform: capitalize; }
+
+    .shell {
+      display: flex;
+      align-items: flex-start;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--sidebar-bg);
+      color: #cbd5e1;
+      height: calc(100vh - 64px);
+      position: sticky;
+      top: 64px;
+      padding: 20px 14px;
+      overflow-y: auto;
+      transition: margin-left 0.25s ease, width 0.25s ease;
+      flex-shrink: 0;
+      z-index: 55;
+    }
+
+    .sidebar.collapsed { margin-left: calc(-1 * var(--sidebar-w)); }
+
+    .sidebar-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: #64748b;
+      padding: 0 12px 10px;
+      font-weight: 700;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      background: none;
+      border: none;
+      color: #cbd5e1;
+      padding: 11px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      text-align: left;
+      margin-bottom: 4px;
+      transition: background 0.15s, color 0.15s;
+    }
+    .nav-item:hover { background: var(--sidebar-hover); color: #fff; transform: none; box-shadow: none; }
+    .nav-item.active { background: var(--primary); color: #fff; }
+    .nav-item .icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+    .nav-item[hidden] { display: none; }
+
+    /* Main content */
+    .main {
+      flex: 1;
+      min-width: 0;
+      padding: 28px 32px 60px;
+    }
+
+    .page { display: none; animation: fadeIn 0.25s ease; }
+    .page.active { display: block; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+    .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 22px; flex-wrap: wrap; }
+    .page-head h2 { font-size: 22px; font-weight: 700; }
+    .page-head p { color: var(--text-muted); font-size: 13px; margin-top: 2px; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      padding: 22px;
+      margin-bottom: 20px;
+    }
+
+    /* ============================ STAT CARDS ============================ */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+
+    .stat-icon {
+      width: 44px; height: 44px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+
+    .stat-value { font-size: 24px; font-weight: 700; line-height: 1.15; }
+    .stat-label { font-size: 12px; color: var(--text-muted); }
+
+    /* ============================ CHARTS ============================ */
+    .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .chart-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+
+    .chart-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .chart-label { width: 104px; font-size: 13px; color: var(--text); font-weight: 500; text-transform: capitalize; flex-shrink: 0; }
+    .chart-track {
+      flex: 1; height: 22px; background: #f1f5f9;
+      border-radius: 6px; overflow: hidden; min-width: 40px;
+    }
+    .chart-bar {
+      height: 100%; border-radius: 6px;
+      transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+      background: var(--primary);
+      min-width: 2px;
+    }
+    .chart-val { width: 30px; text-align: right; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+
+    /* ============================ FORMS ============================ */
+    .form-group { margin-bottom: 16px; }
+    label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 13px; color: var(--text); }
+    label .req { color: var(--danger); }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text);
+      background: var(--surface);
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+    }
+    textarea { resize: vertical; min-height: 110px; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-actions { display: flex; gap: 10px; margin-top: 4px; }
+
+    /* ============================ BUTTONS ============================ */
+    button, .btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    button:hover, .btn:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(79, 70, 229, 0.28); }
+    button:active, .btn:active { transform: translateY(0); }
+    button:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .btn-secondary { background: #64748b; }
+    .btn-secondary:hover { background: #475569; }
+    .btn-danger { background: var(--danger); }
+    .btn-danger:hover { background: #b91c1c; }
+    .btn-success { background: var(--success); }
+    .btn-success:hover { background: #15803d; }
+    .btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: #f8fafc; box-shadow: none; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 6px; }
+    .btn-block { width: 100%; }
+
+    /* ============================ TABLES ============================ */
+    .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      background: #f8fafc;
+      padding: 11px 14px;
+      text-align: left;
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    td { padding: 13px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr { transition: background 0.12s; }
+    tbody tr:hover { background: #f8fafc; cursor: pointer; }
+    tbody tr.no-hover:hover { background: transparent; cursor: default; }
+
+    .cell-strong { font-weight: 700; }
+    .cell-muted { color: var(--text-muted); font-size: 12.5px; }
+    .whitespace-nowrap { white-space: nowrap; }
+
+    /* ============================ BADGES ============================ */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      white-space: nowrap;
+    }
+    .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+    .badge-open, .badge-active { background: var(--info-bg); color: var(--info); }
+    .badge-in_progress, .badge-pending { background: var(--warning-bg); color: var(--warning); }
+    .badge-closed, .badge-resolved { background: var(--success-bg); color: var(--success); }
+    .badge-cancelled { background: #f1f5f9; color: var(--text-muted); }
+    .badge-critical { background: var(--danger-bg); color: var(--danger); }
+    .badge-high { background: var(--warning-bg); color: var(--warning); }
+    .badge-medium { background: var(--info-bg); color: var(--info); }
+    .badge-low { background: #e2e8f0; color: var(--text-muted); }
+    .badge-admin { background: #ede9fe; color: #7c3aed; }
+    .badge-default { background: #e2e8f0; color: var(--text-muted); }
+
+    /* ============================ TOOLBAR / FILTERS ============================ */
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .search-box { position: relative; flex: 1; min-width: 200px; }
+    .search-box input { padding-left: 36px; }
+    .search-box::before {
+      content: '⌕';
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      color: var(--text-muted); font-size: 16px; pointer-events: none;
+    }
+    .filter-select { width: auto; min-width: 130px; }
+
+    /* ============================ SKELETONS ============================ */
+    .sk { background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 6px; }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    .sk-row { height: 16px; margin-bottom: 12px; }
+    .sk-line { height: 12px; margin-bottom: 10px; }
+
+    /* ============================ EMPTY STATES ============================ */
+    .empty-state { text-align: center; padding: 56px 20px; color: var(--text-muted); }
+    .empty-state .empty-icon { font-size: 44px; margin-bottom: 14px; opacity: 0.7; }
+    .empty-state h4 { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .empty-state p { font-size: 13px; max-width: 380px; margin: 0 auto 18px; }
+
+    /* ============================ MODALS ============================ */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(2px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.active { display: flex; animation: fadeIn 0.18s ease; }
+
+    .modal {
+      background: var(--surface);
+      border-radius: 14px;
+      box-shadow: var(--shadow-lg);
+      width: 100%;
+      max-width: 560px;
+      max-height: 90vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      animation: popIn 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .modal.wide { max-width: 720px; }
+    @keyframes popIn { from { opacity: 0; transform: scale(0.96) translateY(10px); } to { opacity: 1; transform: none; } }
+
+    .modal-head {
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 14px;
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .modal-head h3 { font-size: 17px; font-weight: 700; }
+    .modal-head .sub { font-size: 12.5px; color: var(--text-muted); margin-top: 3px; }
+    .modal-x {
+      background: none; border: none; font-size: 22px; line-height: 1;
+      color: var(--text-muted); cursor: pointer; padding: 2px 6px; border-radius: 6px;
+      box-shadow: none; transform: none;
+    }
+    .modal-x:hover { background: #f1f5f9; color: var(--text); box-shadow: none; transform: none; }
+
+    .modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; }
+    .modal-foot {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+      display: flex; justify-content: flex-end; gap: 10px;
+      background: #f8fafc;
+    }
+
+    /* Ticket detail bits */
+    .detail-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 18px; }
+    .detail-meta .m { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+    .detail-meta .m .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted); font-weight: 700; margin-bottom: 3px; }
+    .detail-meta .m .v { font-weight: 600; font-size: 13px; }
+
+    .detail-section { margin-bottom: 20px; }
+    .detail-section h4 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.7px; color: var(--text-muted); font-weight: 700; margin-bottom: 8px; }
+    .detail-desc { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 14px; font-size: 13.5px; line-height: 1.65; white-space: pre-wrap; word-break: break-word; }
+
+    .comment { display: flex; gap: 10px; margin-bottom: 14px; }
+    .comment .c-avatar {
+      width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+      background: #e2e8f0; color: var(--text);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700;
+    }
+    .comment .c-bubble { background: #f8fafc; border: 1px solid var(--border); border-radius: 4px 10px 10px 10px; padding: 9px 12px; flex: 1; min-width: 0; }
+    .comment .c-meta { font-size: 11px; color: var(--text-muted); margin-bottom: 3px; }
+    .comment .c-meta strong { color: var(--text); }
+    .comment .c-text { font-size: 13px; line-height: 1.55; word-break: break-word; }
+
+    /* ============================ TOASTS ============================ */
+    .toast-wrap {
+      position: fixed; top: 18px; right: 18px; z-index: 2000;
+      display: flex; flex-direction: column; gap: 10px;
+      max-width: calc(100vw - 36px);
+    }
+    .toast {
+      display: flex; align-items: flex-start; gap: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--primary);
+      border-radius: 10px;
+      box-shadow: var(--shadow-lg);
+      padding: 12px 16px;
+      min-width: 280px;
+      max-width: 380px;
+      animation: slideIn 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .toast.success { border-left-color: var(--success); }
+    .toast.error { border-left-color: var(--danger); }
+    .toast .t-icon { font-size: 16px; line-height: 1.3; flex-shrink: 0; }
+    .toast .t-body { flex: 1; min-width: 0; font-size: 13px; line-height: 1.45; }
+    .toast .t-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 15px; padding: 0 2px; box-shadow: none; transform: none; }
+    .toast .t-close:hover { color: var(--text); background: none; box-shadow: none; transform: none; }
+    .toast.leaving { animation: slideOut 0.2s ease forwards; }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: none; } }
+    @keyframes slideOut { to { opacity: 0; transform: translateX(30px); } }
+
+    /* ============================ MISC ============================ */
+    .hide { display: none !important; }
+    .error-text { color: var(--danger); font-size: 12px; margin-top: 6px; }
+
+    .check-line { display: flex; align-items: flex-start; gap: 10px; background: var(--warning-bg); border: 1px solid #fde68a; border-radius: 8px; padding: 12px 14px; margin-top: 14px; font-size: 13px; color: #92400e; }
+    .check-line input { width: 16px; height: 16px; margin-top: 2px; flex-shrink: 0; accent-color: var(--danger); }
+
+    .mobile-scrim { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.5); z-index: 54; }
+
+    /* ============================ RESPONSIVE ============================ */
+    @media (max-width: 1080px) {
+      .chart-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 860px) {
+      .sidebar {
+        position: fixed; top: 64px; left: 0; bottom: 0; height: calc(100vh - 64px);
+        margin-left: 0; transform: translateX(-100%); transition: transform 0.25s ease;
+        box-shadow: var(--shadow-lg);
+      }
+      .sidebar.mobile-open { transform: none; }
+      .sidebar.collapsed { margin-left: 0; transform: translateX(-100%); }
+      .mobile-scrim.active { display: block; }
+      .main { padding: 20px 16px 60px; }
+      .form-row { grid-template-columns: 1fr; }
+      .topbar { padding: 0 14px; }
+      .topbar-brand span.tb-title { display: none; }
+    }
+
+    @media (max-width: 560px) {
+      .stat-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .stat-card { padding: 14px; }
+      .stat-value { font-size: 19px; }
+      .stat-label { font-size: 10.5px; }
+      .stat-icon { width: 36px; height: 36px; font-size: 16px; }
+      .user-meta .role { display: none; }
+      .chart-label { width: 76px; font-size: 12px; }
+      .modal { max-height: 92vh; }
+      .modal-head, .modal-body, .modal-foot { padding-left: 16px; padding-right: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========================= LOGIN ========================= -->
+  <div id="loginPage">
+    <div class="login-card">
+      <div class="login-logo">🎫</div>
+      <h1>ISP Ticketing System</h1>
+      <p class="subtitle">Sign in to the operator console</p>
+      <div id="loginError" class="alert alert-danger hide" style="display:none;"></div>
+      <form onsubmit="handleLogin(event)" autocomplete="on">
+        <div class="form-group">
+          <label for="loginEmail">Email</label>
+          <input type="email" id="loginEmail" placeholder="you@example.com" required autofocus>
+        </div>
+        <div class="form-group">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn-block" style="width:100%;">Sign in</button>
+      </form>
+      <p style="margin-top:18px; text-align:center; font-size:12px; color:var(--text-muted);">
+        Operator access only · User accounts are created by an administrator
+      </p>
+    </div>
+  </div>
+
+  <!-- ========================= APP ========================= -->
+  <div id="mainApp">
+    <header class="topbar">
+      <button class="topbar-toggle" onclick="toggleSidebar()" title="Toggle sidebar" aria-label="Toggle sidebar">☰</button>
+      <div class="topbar-brand">
+        <span class="brand-mark">🎫</span>
+        <span class="tb-title">ISP Ticketing</span>
+      </div>
+      <div class="topbar-right">
+        <div class="user-chip">
+          <div class="user-avatar" id="userAvatar">?</div>
+          <div class="user-meta">
+            <div class="name" id="userName">—</div>
+            <div class="role" id="userRole">—</div>
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="logout()">Logout</button>
+      </div>
+    </header>
+
+    <div class="shell">
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-label">Workspace</div>
+        <button class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')">
+          <span class="icon">📊</span><span>Dashboard</span>
+        </button>
+        <button class="nav-item" data-page="tickets" onclick="navigate('tickets')">
+          <span class="icon">🎫</span><span>Tickets</span>
+        </button>
+        <button class="nav-item" data-page="newTicket" onclick="navigate('newTicket')">
+          <span class="icon">➕</span><span>New Ticket</span>
+        </button>
+        <button class="nav-item" data-page="customers" onclick="navigate('customers')">
+          <span class="icon">👥</span><span>Customers</span>
+        </button>
+        <button class="nav-item" data-page="users" id="usersNav" hidden onclick="navigate('users')">
+          <span class="icon">🛡️</span><span>Users &amp; Access</span>
+        </button>
+      </aside>
+      <div class="mobile-scrim" id="mobileScrim" onclick="closeMobileSidebar()"></div>
+
+      <main class="main">
+        <!-- ===== Dashboard ===== -->
+        <section class="page active" id="page-dashboard">
+          <div class="page-head">
+            <div>
+              <h2>Dashboard</h2>
+              <p>Live overview of your support operations</p>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="loadDashboard()">↻ Refresh</button>
+          </div>
+          <div id="dashboardContent"></div>
+        </section>
+
+        <!-- ===== Tickets ===== -->
+        <section class="page" id="page-tickets">
+          <div class="page-head">
+            <div>
+              <h2>Tickets</h2>
+              <p>Search, filter and open a ticket for full detail</p>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="navigate('newTicket')">＋ New Ticket</button>
+          </div>
+          <div class="toolbar">
+            <div class="search-box">
+              <input type="text" id="ticketSearch" placeholder="Search by number, title or customer…" oninput="onTicketFilter()">
+            </div>
+            <select class="filter-select" id="ticketStatusFilter" onchange="onTicketFilter()">
+              <option value="all">All statuses</option>
+              <option value="open">Open</option>
+              <option value="in_progress">In progress</option>
+              <option value="pending">Pending</option>
+              <option value="resolved">Resolved</option>
+              <option value="closed">Closed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+            <select class="filter-select" id="ticketPriorityFilter" onchange="onTicketFilter()">
+              <option value="all">All priorities</option>
+              <option value="critical">Critical</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+          <div id="ticketsContent"></div>
+        </section>
+
+        <!-- ===== New Ticket ===== -->
+        <section class="page" id="page-newTicket">
+          <div class="page-head">
+            <div>
+              <h2>New Ticket</h2>
+              <p>Log a support request for a customer</p>
+            </div>
+          </div>
+          <div class="card" style="max-width:640px;">
+            <form onsubmit="handleCreateTicket(event)">
+              <div class="form-group">
+                <label for="ticketCustomer">Customer <span class="req">*</span></label>
+                <select id="ticketCustomer" required>
+                  <option value="">Select customer…</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="ticketTitle">Title <span class="req">*</span></label>
+                <input type="text" id="ticketTitle" placeholder="Short summary of the issue" required>
+              </div>
+              <div class="form-group">
+                <label for="ticketDescription">Description <span class="req">*</span></label>
+                <textarea id="ticketDescription" placeholder="Detailed description of the reported issue" required></textarea>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="ticketPriority">Priority</label>
+                  <select id="ticketPriority">
+                    <option value="low">Low</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="high">High</option>
+                    <option value="critical">Critical</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="ticketAssignedTo">Assign to</label>
+                  <select id="ticketAssignedTo">
+                    <option value="">Unassigned</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn-success">Create ticket</button>
+                <button type="button" class="btn btn-ghost" onclick="navigate('tickets')">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <!-- ===== Customers ===== -->
+        <section class="page" id="page-customers">
+          <div class="page-head">
+            <div>
+              <h2>Customers</h2>
+              <p>Search accounts, create new customers, manage deletions</p>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openCustomerForm()">＋ New Customer</button>
+          </div>
+          <div class="toolbar">
+            <div class="search-box">
+              <input type="text" id="customerSearch" placeholder="Search by name or account number…" oninput="onCustomerFilter()">
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="loadCustomers()">↻ Refresh</button>
+          </div>
+          <div id="customersContent"></div>
+
+          <!-- Customer create form (toggled inline) -->
+          <div class="card hide" id="customerFormCard" style="max-width:640px;">
+            <div class="modal-head" style="padding:0 0 14px; border-bottom:1px solid var(--border); margin-bottom:18px;">
+              <div><h3>New customer</h3><div class="sub">Register a new ISP account</div></div>
+              <button class="modal-x" onclick="closeCustomerForm()" title="Close">✕</button>
+            </div>
+            <form onsubmit="handleCreateCustomer(event)">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="customerAccount">Account number <span class="req">*</span></label>
+                  <input type="text" id="customerAccount" placeholder="e.g. ACC-12345" required>
+                </div>
+                <div class="form-group">
+                  <label for="customerEmail">Email</label>
+                  <input type="email" id="customerEmail" placeholder="optional">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="customerFirstName">First name <span class="req">*</span></label>
+                  <input type="text" id="customerFirstName" required>
+                </div>
+                <div class="form-group">
+                  <label for="customerLastName">Last name <span class="req">*</span></label>
+                  <input type="text" id="customerLastName" required>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="customerAccountType">Account type</label>
+                <select id="customerAccountType">
+                  <option value="shared_internet">Shared Internet</option>
+                  <option value="dedicated">Dedicated</option>
+                </select>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn-success">Create customer</button>
+                <button type="button" class="btn btn-ghost" onclick="closeCustomerForm()">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <!-- ===== Users (admin only) ===== -->
+        <section class="page" id="page-users">
+          <div class="page-head">
+            <div>
+              <h2>Users &amp; Access</h2>
+              <p>Operator accounts — administrator view</p>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openUserForm()">＋ New User</button>
+          </div>
+          <div class="toolbar">
+            <div class="search-box">
+              <input type="text" id="userSearch" placeholder="Search users by name or email…" oninput="onUserFilter()">
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="loadUsers()">↻ Refresh</button>
+          </div>
+          <div id="usersContent"></div>
+
+          <!-- Admin-only user creation form -->
+          <div class="card hide" id="userFormCard" style="max-width:640px;">
+            <div class="modal-head" style="padding:0 0 14px; border-bottom:1px solid var(--border); margin-bottom:18px;">
+              <div><h3>New user</h3><div class="sub">Create an operator account (admin only)</div></div>
+              <button class="modal-x" onclick="closeUserForm()" title="Close">✕</button>
+            </div>
+            <form onsubmit="handleCreateUser(event)">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="userFirstName">First name <span class="req">*</span></label>
+                  <input type="text" id="userFirstName" required>
+                </div>
+                <div class="form-group">
+                  <label for="userLastName">Last name <span class="req">*</span></label>
+                  <input type="text" id="userLastName" required>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="userEmail">Email <span class="req">*</span></label>
+                <input type="email" id="userEmail" placeholder="operator@example.com" required>
+              </div>
+              <div class="form-group">
+                <label for="userPassword">Password <span class="req">*</span></label>
+                <input type="password" id="userPassword" placeholder="Initial password" required minlength="6">
+              </div>
+              <div class="form-group">
+                <label for="userRole">Role</label>
+                <select id="userRole">
+                  <option value="specialist">Specialist</option>
+                  <option value="engineer">Engineer</option>
+                  <option value="team_lead">Team Lead</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn-success">Create user</button>
+                <button type="button" class="btn btn-ghost" onclick="closeUserForm()">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- ========================= MODAL HOST ========================= -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal" id="modalBox" role="dialog" aria-modal="true"></div>
+  </div>
+
+  <!-- ========================= TOASTS ========================= -->
+  <div class="toast-wrap" id="toastWrap"></div>
+
+  <script>
+    /* ================================================================
+       CONFIGURATION — API base resolution (no hardcoded bare IP in code)
+       ================================================================ */
+    function resolveApiBase() {
+      var meta = document.querySelector('meta[name="api-base"]');
+      var base = meta && meta.content ? meta.content.trim() : '';
+      if (!base) base = 'http://10.227.227.35:9001';
+
+      // Relative base (e.g. "/api/v1") -> this host serves/proxies the API.
+      if (base.charAt(0) === '/') return window.location.origin;
+
+      try {
+        var parsed = new URL(base);
+        // Page is served from the exact same origin as the API -> trust origin.
+        if (parsed.origin === window.location.origin) return window.location.origin;
+      } catch (e) { /* malformed meta -> fall through to raw value */ }
+
+      return base.replace(/\/+$/, '');
+    }
+    var API_BASE = resolveApiBase();
+    var API_URL = API_BASE + '/api/v1';
+
+    /* ================================================================
+       STATE
+       ================================================================ */
+    var token = localStorage.getItem('token');
+    var currentUser = null;
+
+    var cache = {
+      customers: [], customerById: {},
+      users: [], userById: {},
+      tickets: []
+    };
+
+    var ui = {
+      page: 'dashboard',
+      ticketQ: '', ticketStatus: 'all', ticketPriority: 'all',
+      customerQ: '', userQ: '',
+      currentTicketId: null
+    };
+
+    var STATUS_CLASSES = {
+      open: 'badge-open', active: 'badge-open',
+      in_progress: 'badge-in_progress', pending: 'badge-pending',
+      resolved: 'badge-resolved', closed: 'badge-closed',
+      cancelled: 'badge-cancelled'
+    };
+    var PRIORITY_CLASSES = {
+      critical: 'badge-critical', high: 'badge-high',
+      medium: 'badge-medium', low: 'badge-low'
+    };
+    var STATUS_LABELS = { open: 'Open', in_progress: 'In Progress', pending: 'Pending',
+                          resolved: 'Resolved', closed: 'Closed', cancelled: 'Cancelled' };
+    var PRIORITY_LABELS = { critical: 'Critical', high: 'High', medium: 'Medium', low: 'Low' };
+    var PRIORITY_ORDER = { critical: 0, high: 1, medium: 2, low: 3 };
+    var ROLE_LABELS = { admin: 'Administrator', team_lead: 'Team Lead',
+                        engineer: 'Engineer', specialist: 'Specialist' };
+
+    /* ================================================================
+       UTILITIES
+       ================================================================ */
+    function esc(value) {
+      if (value === null || value === undefined) return '';
+      return String(value)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function initials(first, last) {
+      var f = (first || '').trim().charAt(0);
+      var l = (last || '').trim().charAt(0);
+      return ((f + l) || '?').toUpperCase();
+    }
+
+    function fullName(user) {
+      if (!user) return '—';
+      var f = (user.first_name || '').trim();
+      var l = (user.last_name || '').trim();
+      var name = (f + ' ' + l).trim();
+      return name || esc(user.email || 'Unnamed');
+    }
+
+    function statusBadge(status) {
+      var cls = STATUS_CLASSES[status] || 'badge-default';
+      var label = STATUS_LABELS[status] || esc(status || 'unknown');
+      return '<span class="badge ' + cls + '">' + label + '</span>';
+    }
+
+    function priorityBadge(priority) {
+      var cls = PRIORITY_CLASSES[priority] || 'badge-default';
+      var label = PRIORITY_LABELS[priority] || esc(priority || 'normal');
+      return '<span class="badge ' + cls + '">' + label + '</span>';
+    }
+
+    function roleBadge(role) {
+      if (role === 'admin') return '<span class="badge badge-admin">Admin</span>';
+      var label = ROLE_LABELS[role] || esc(role || 'user');
+      return '<span class="badge badge-default">' + label + '</span>';
+    }
+
+    function timeAgo(dateStr) {
+      if (!dateStr) return '—';
+      var d = new Date(dateStr);
+      if (isNaN(d.getTime())) return '—';
+
+      var seconds = Math.round((Date.now() - d.getTime()) / 1000);
+      var future = seconds < 0;
+      seconds = Math.abs(seconds);
+
+      var intervals = [
+        { limit: 31536000, unit: 'year' },
+        { limit: 2592000, unit: 'month' },
+        { limit: 604800, unit: 'week' },
+        { limit: 86400, unit: 'day' },
+        { limit: 3600, unit: 'hour' },
+        { limit: 60, unit: 'minute' }
+      ];
+
+      if (seconds < 10) return 'just now';
+
+      for (var i = 0; i < intervals.length; i++) {
+        if (seconds >= intervals[i].limit) {
+          var value = Math.floor(seconds / intervals[i].limit);
+          var label = value === 1 ? intervals[i].unit : intervals[i].unit + 's';
+          return future ? 'in ' + value + ' ' + label : value + ' ' + label + ' ago';
+        }
+      }
+      var mins = Math.max(1, Math.round(seconds / 60));
+      return mins + (mins === 1 ? ' minute' : ' minutes') + ' ago';
+    }
+
+    function formatDateTime(dateStr) {
+      if (!dateStr) return '—';
+      var d = new Date(dateStr);
+      if (isNaN(d.getTime())) return '—';
+      return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) +
+             ' · ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    }
+
+    /* ================================================================
+       TOAST NOTIFICATIONS
+       ================================================================ */
+    function toast(message, type) {
+      type = type || 'info';
+      var wrap = document.getElementById('toastWrap');
+      var el = document.createElement('div');
+      el.className = 'toast ' + type;
+
+      var icon = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ';
+      var safe = String(message || '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
+
+      el.innerHTML =
+        '<span class="t-icon">' + icon + '</span>' +
+        '<div class="t-body">' + safe + '</div>' +
+        '<button class="t-close" aria-label="Dismiss">✕</button>';
+
+      var closeBtn = el.querySelector('.t-close');
+      closeBtn.onclick = function () { dismissToast(el); };
+
+      wrap.appendChild(el);
+      var timer = setTimeout(function () { dismissToast(el); }, 4200);
+      el._timer = timer;
+    }
+
+    function dismissToast(el) {
+      if (!el || !el.parentNode) return;
+      clearTimeout(el._timer);
+      el.classList.add('leaving');
+      setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 200);
+    }
+
+    /* ================================================================
+       MODAL SYSTEM
+       ================================================================ */
+    function openModal(html, wide) {
+      var overlay = document.getElementById('modalOverlay');
+      var box = document.getElementById('modalBox');
+      box.className = 'modal' + (wide ? ' wide' : '');
+      box.innerHTML = html;
+      overlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      document.getElementById('modalOverlay').classList.remove('active');
+      document.getElementById('modalBox').innerHTML = '';
+      document.body.style.overflow = '';
+      ui.currentTicketId = null;
+    }
+
+    document.getElementById('modalOverlay').addEventListener('mousedown', function (e) {
+      if (e.target === this) closeModal();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        var overlay = document.getElementById('modalOverlay');
+        if (overlay.classList.contains('active')) closeModal();
+        closeMobileSidebar();
+      }
+    });
+
+    /* Generic confirm modal (replaces window.confirm).
+       opts: { title, message, confirmText, danger, onConfirm, onCancel } */
+    function showConfirm(opts) {
+      opts = opts || {};
+      var html =
+        '<div class="modal-head">' +
+          '<div><h3>' + esc(opts.title || 'Are you sure?') + '</h3>' +
+          '<div class="sub">' + esc(opts.sub || 'This action cannot be undone') + '</div></div>' +
+          '<button class="modal-x" onclick="closeModal()" aria-label="Close">✕</button>' +
+        '</div>' +
+        '<div class="modal-body"><div style="font-size:13.5px; line-height:1.6;">' + (opts.message || '') + '</div>' +
+          (opts.extra || '') +
+        '</div>' +
+        '<div class="modal-foot">' +
+          '<button class="btn btn-ghost" id="confirmCancel">' + esc(opts.cancelText || 'Cancel') + '</button>' +
+          '<button class="btn ' + (opts.danger ? 'btn-danger' : 'btn-primary') + '" id="confirmOk">' +
+            esc(opts.confirmText || 'Confirm') + '</button>' +
+        '</div>';
+
+      openModal(html);
+      document.getElementById('confirmCancel').onclick = function () {
+        closeModal();
+        if (typeof opts.onCancel === 'function') opts.onCancel();
+      };
+      document.getElementById('confirmOk').onclick = function () {
+        var force = false;
+        var cb = document.getElementById('forceDeleteCheck');
+        if (cb) force = cb.checked;
+        closeModal();
+        if (typeof opts.onConfirm === 'function') opts.onConfirm(force);
+      };
+    }
+
+    /* ================================================================
+       API LAYER
+       ================================================================ */
+    async function apiCall(endpoint, options) {
+      options = options || {};
+      var headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+      if (options.headers) Object.assign(headers, options.headers);
+
+      var response = await fetch(API_URL + endpoint, {
+        method: options.method || 'GET',
+        headers: headers,
+        body: options.body ? JSON.stringify(options.body) : undefined
+      });
+
+      var data = null;
+      var raw = await response.text();
+      if (raw) {
+        try { data = JSON.parse(raw); } catch (e) { data = { error: raw }; }
+      }
+      return { ok: response.ok, status: response.status, data: data };
+    }
+
+    function apiError(res, fallback) {
+      if (res.data && res.data.error) return res.data.error;
+      if (res.status === 401) return 'Session expired — please log in again';
+      if (res.status === 403) return 'You do not have permission to do this';
+      if (res.status === 404) return 'Not found';
+      if (res.status >= 500) return 'Server error — please try again';
+      return fallback || 'Request failed';
+    }
+
+    /* ================================================================
+       AUTHENTICATION
+       ================================================================ */
+    async function handleLogin(e) {
+      e.preventDefault();
+      var email = document.getElementById('loginEmail').value.trim();
+      var password = document.getElementById('loginPassword').value;
+      if (!email || !password) return;
+
+      var btn = e.target.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      btn.textContent = 'Signing in…';
+
+      try {
+        var res = await fetch(API_URL + '/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, password: password })
+        });
+        var data = await res.json().catch(function () { return {}; });
+
+        if (res.ok && data.token) {
+          token = data.token;
+          currentUser = data.user;
+          localStorage.setItem('token', token);
+          localStorage.setItem('user', JSON.stringify(currentUser));
+          toast('Welcome back, ' + ((currentUser.first_name) || currentUser.email), 'success');
+          await showMainApp();
+        } else {
+          showLoginError(data.error || data.message || 'Invalid email or password');
+        }
+      } catch (err) {
+        showLoginError('Cannot reach the server — check your connection');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Sign in';
+      }
+    }
+
+    function showLoginError(msg) {
+      var box = document.getElementById('loginError');
+      box.textContent = msg;
+      box.style.display = 'block';
+      setTimeout(function () { box.style.display = 'none'; }, 6000);
+    }
+
+    function logout() {
+      token = null;
+      currentUser = null;
+      cache = { customers: [], customerById: {}, users: [], userById: {}, tickets: [] };
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      document.getElementById('mainApp').classList.remove('active');
+      document.getElementById('loginPage').style.display = '';
+      document.getElementById('loginPassword').value = '';
+      toast('You have been signed out');
+    }
+
+    async function showMainApp() {
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('mainApp').classList.add('active');
+      await refreshCurrentUser();
+      renderUserChip();
+      applyRoleVisibility();
+      navigate('dashboard', true);
+      Promise.all([loadCustomers(true), loadUsers(true)]).catch(function () {});
+    }
+
+    async function refreshCurrentUser() {
+      // Prefer the authoritative session from the API when available.
+      if (!token) return;
+      try {
+        var res = await apiCall('/auth/me');
+        if (res.ok && res.data && res.data.user) {
+          currentUser = res.data.user;
+          localStorage.setItem('user', JSON.stringify(currentUser));
+          return;
+        }
+        if (res.status === 401) { logout(); return; }
+      } catch (e) { /* network hiccup — fall back to stored user */ }
+      if (!currentUser) {
+        try { currentUser = JSON.parse(localStorage.getItem('user') || 'null'); } catch (e) { currentUser = null; }
+      }
+    }
+
+    function renderUserChip() {
+      if (!currentUser) return;
+      document.getElementById('userName').textContent = fullName(currentUser);
+      document.getElementById('userRole').textContent = ROLE_LABELS[currentUser.role] || (currentUser.role || 'user');
+      document.getElementById('userAvatar').textContent = initials(currentUser.first_name, currentUser.last_name);
+    }
+
+    function applyRoleVisibility() {
+      var isAdmin = !!(currentUser && currentUser.role === 'admin');
+      document.getElementById('usersNav').hidden = !isAdmin;
+      if (!isAdmin && ui.page === 'users') navigate('dashboard', true);
+    }
+
+    function isAdmin() { return !!(currentUser && currentUser.role === 'admin'); }
+
+    /* ================================================================
+       NAVIGATION
+       ================================================================ */
+    function navigate(page, skipLoad) {
+      ui.page = page;
+      var sections = document.querySelectorAll('.page');
+      for (var i = 0; i < sections.length; i++) sections[i].classList.remove('active');
+      var target = document.getElementById('page-' + page);
+      if (target) target.classList.add('active');
+
+      var navs = document.querySelectorAll('.nav-item');
+      for (var j = 0; j < navs.length; j++) {
+        navs[j].classList.toggle('active', navs[j].getAttribute('data-page') === page);
+      }
+
+      closeMobileSidebar();
+
+      if (skipLoad) return;
+      if (page === 'dashboard') loadDashboard();
+      else if (page === 'tickets') loadTickets();
+      else if (page === 'newTicket') prepareTicketForm();
+      else if (page === 'customers') loadCustomers();
+      else if (page === 'users') loadUsers();
+    }
+
+    function toggleSidebar() {
+      var sb = document.getElementById('sidebar');
+      if (window.innerWidth <= 860) {
+        sb.classList.toggle('mobile-open');
+        document.getElementById('mobileScrim').classList.toggle('active', sb.classList.contains('mobile-open'));
+      } else {
+        sb.classList.toggle('collapsed');
+      }
+    }
+
+    function closeMobileSidebar() {
+      var sb = document.getElementById('sidebar');
+      sb.classList.remove('mobile-open');
+      document.getElementById('mobileScrim').classList.remove('active');
+    }
+
+    /* ================================================================
+       SKELETONS & EMPTY STATES
+       ================================================================ */
+    function skeletonRows(n) {
+      var out = '<div style="padding:18px;">';
+      for (var i = 0; i < (n || 5); i++) {
+        out += '<div class="sk sk-row" style="width:' + (88 - i * 9) + '%"></div>';
+      }
+      return out + '</div>';
+    }
+
+    function skeletonStats() {
+      var out = '<div class="stat-grid">';
+      for (var i = 0; i < 4; i++) {
+        out += '<div class="stat-card"><div class="sk" style="width:44px;height:44px;border-radius:10px;flex-shrink:0;"></div>' +
+               '<div style="flex:1;"><div class="sk sk-line" style="width:38px;height:20px;margin-bottom:6px;"></div>' +
+               '<div class="sk sk-line" style="width:64px;height:10px;"></div></div></div>';
+      }
+      out += '</div><div class="chart-grid">' +
+        '<div class="card chart-card"><div class="sk sk-line" style="width:120px;height:16px;margin-bottom:18px;"></div>' +
+        skeletonRows(4).replace(/<div style="padding:18px;">/, '<div>').replace(/<\/div>$/, '') + '</div>' +
+        '<div class="card chart-card"><div class="sk sk-line" style="width:130px;height:16px;margin-bottom:18px;"></div>' +
+        skeletonRows(4).replace(/<div style="padding:18px;">/, '<div>').replace(/<\/div>$/, '') + '</div>' +
+        '</div>';
+      return out;
+    }
+
+    function emptyState(icon, title, message, actionHtml) {
+      return '<div class="empty-state">' +
+        '<div class="empty-icon">' + icon + '</div>' +
+        '<h4>' + esc(title) + '</h4>' +
+        '<p>' + esc(message) + '</p>' +
+        (actionHtml || '') +
+      '</div>';
+    }
+
+    /* ================================================================
+       DASHBOARD
+       ================================================================ */
+    async function loadDashboard() {
+      var host = document.getElementById('dashboardContent');
+      host.innerHTML = skeletonStats();
+      try {
+        var res = await apiCall('/analytics/dashboard');
+        if (!res.ok) {
+          host.innerHTML = emptyState('⚠️', 'Could not load dashboard', apiError(res, 'Failed to load analytics'),
+            '<button class="btn btn-ghost btn-sm" onclick="loadDashboard()">Try again</button>');
+          if (res.status === 401) logout();
+          return;
+        }
+        renderDashboard(res.data);
+      } catch (err) {
+        host.innerHTML = emptyState('⚠️', 'Could not load dashboard', 'Network error — please check your connection',
+          '<button class="btn btn-ghost btn-sm" onclick="loadDashboard()">Try again</button>');
+      }
+    }
+
+    function renderDashboard(data) {
+      var stats = (data && data.stats) || (data && data.summary) || {};
+      var charts = (data && data.charts) || {};
+
+      var byStatus = charts.tickets_by_status || data.by_status || {};
+      var byPriority = charts.tickets_by_priority || data.by_priority || {};
+      var recent = charts.recent_tickets || data.recent_tickets || [];
+
+      var cards = [
+        { icon: '🎫', bg: 'var(--primary-light)', fg: 'var(--primary)', value: stats.total_tickets, label: 'Total tickets' },
+        { icon: '🔵', bg: 'var(--info-bg)', fg: 'var(--info)', value: stats.open_tickets, label: 'Open tickets' },
+        { icon: '⏳', bg: 'var(--warning-bg)', fg: 'var(--warning)', value: stats.in_progress, label: 'In progress' },
+        { icon: '✅', bg: 'var(--success-bg)', fg: 'var(--success)', value: stats.closed, label: 'Closed' },
+        { icon: '👥', bg: '#ede9fe', fg: '#7c3aed', value: stats.total_customers, label: 'Customers' },
+        { icon: '🛡️', bg: '#e2e8f0', fg: 'var(--text-muted)', value: stats.total_users, label: 'Users' }
+      ];
+
+      var html = '<div class="stat-grid">';
+      for (var i = 0; i < cards.length; i++) {
+        var c = cards[i];
+        html += '<div class="stat-card">' +
+          '<div class="stat-icon" style="background:' + c.bg + '; color:' + c.fg + ';">' + c.icon + '</div>' +
+          '<div><div class="stat-value">' + esc(c.value) + '</div><div class="stat-label">' + esc(c.label) + '</div></div>' +
+        '</div>';
+      }
+      html += '</div>';
+
+      html += '<div class="chart-grid">';
+      html += barChart('Tickets by status', byStatus, 'var(--info)');
+      html += barChart('Tickets by priority', byPriority, 'var(--primary)', PRIORITY_ORDER);
+      html += '</div>';
+
+      if (recent && recent.length) {
+        html += '<div class="card" style="margin-top:20px;">' +
+          '<h3 style="font-size:15px; font-weight:700; margin-bottom:14px;">Recent tickets</h3>' +
+          '<div class="table-wrap"><table><thead><tr>' +
+            '<th>Ticket</th><th>Customer</th><th>Priority</th><th>Status</th><th>Updated</th>' +
+          '</tr></thead><tbody>';
+        for (var r = 0; r < recent.length; r++) {
+          var t = recent[r];
+          html += '<tr onclick="openTicketModal(\'' + esc(t.id) + '\')">' +
+            '<td class="cell-strong">' + esc(t.ticket_number || '#' + t.id) + '</td>' +
+            '<td>' + esc(customerNameOf(t.customer_id)) + '</td>' +
+            '<td>' + priorityBadge(t.priority) + '</td>' +
+            '<td>' + statusBadge(t.status) + '</td>' +
+            '<td class="cell-muted whitespace-nowrap" title="' + esc(formatDateTime(t.updated_at || t.created_at)) + '">' +
+              esc(timeAgo(t.updated_at || t.created_at)) + '</td>' +
+          '</tr>';
+        }
+        html += '</tbody></table></div></div>';
+      }
+
+      document.getElementById('dashboardContent').innerHTML = html;
+    }
+
+    function barChart(title, map, color, orderMap) {
+      var entries = Object.entries(map || {});
+      if (!entries.length) {
+        return '<div class="card chart-card"><h3>' + esc(title) + '</h3>' +
+          emptyState('📊', 'No data yet', 'There is nothing to chart right now.') + '</div>';
+      }
+      if (orderMap) {
+        entries.sort(function (a, b) {
+          var oa = orderMap.hasOwnProperty(a[0]) ? orderMap[a[0]] : 99;
+          var ob = orderMap.hasOwnProperty(b[0]) ? orderMap[b[0]] : 99;
+          return oa - ob;
+        });
+      } else {
+        entries.sort(function (a, b) { return b[1] - a[1]; });
+      }
+      var max = 1;
+      for (var i = 0; i < entries.length; i++) if (entries[i][1] > max) max = entries[i][1];
+
+      var html = '<div class="card chart-card"><h3>' + esc(title) + '</h3>';
+      for (var j = 0; j < entries.length; j++) {
+        var key = entries[j][0];
+        var val = entries[j][1];
+        var pct = Math.max(3, Math.round((val / max) * 100));
+        var label = STATUS_LABELS[key] || PRIORITY_LABELS[key] || esc(key);
+        html += '<div class="chart-row">' +
+          '<span class="chart-label">' + label + '</span>' +
+          '<div class="chart-track"><div class="chart-bar" style="width:' + pct + '%; background:' + color + ';"></div></div>' +
+          '<span class="chart-val">' + esc(val) + '</span>' +
+        '</div>';
+      }
+      return html + '</div>';
+    }
+
+    /* ================================================================
+       CACHE HELPERS
+       ================================================================ */
+    function customerNameOf(id) {
+      var c = cache.customerById[id];
+      return c ? fullName(c) : '—';
+    }
+
+    function userNameOf(id) {
+      var u = cache.userById[id];
+      return u ? fullName(u) : 'Unassigned';
+    }
+
+    async function loadCustomers(silent) {
+      try {
+        var res = await apiCall('/customers');
+        if (!res.ok) throw new Error(apiError(res, 'Failed to load customers'));
+        var list = res.data.customers || res.data || [];
+        cache.customers = Array.isArray(list) ? list : [];
+        cache.customerById = {};
+        for (var i = 0; i < cache.customers.length; i++) {
+          cache.customerById[cache.customers[i].id] = cache.customers[i];
+        }
+        if (ui.page === 'customers' && !silent) renderCustomers();
+        fillCustomerDropdown();
+      } catch (err) {
+        if (!silent) {
+          document.getElementById('customersContent').innerHTML =
+            emptyState('⚠️', 'Could not load customers', err.message,
+              '<button class="btn btn-ghost btn-sm" onclick="loadCustomers()">Try again</button>');
+        }
+      }
+    }
+
+    async function loadUsers(silent) {
+      try {
+        var res = await apiCall('/users');
+        if (!res.ok) throw new Error(apiError(res, 'Failed to load users'));
+        var list = res.data.users || res.data || [];
+        cache.users = Array.isArray(list) ? list : [];
+        cache.userById = {};
+        for (var i = 0; i < cache.users.length; i++) {
+          cache.userById[cache.users[i].id] = cache.users[i];
+        }
+        if (ui.page === 'users' && !silent) renderUsers();
+        fillUserDropdown();
+      } catch (err) {
+        if (!silent && isAdmin()) {
+          document.getElementById('usersContent').innerHTML =
+            emptyState('⚠️', 'Could not load users', err.message,
+              '<button class="btn btn-ghost btn-sm" onclick="loadUsers()">Try again</button>');
+        }
+      }
+    }
+
+    function fillCustomerDropdown() {
+      var sel = document.getElementById('ticketCustomer');
+      if (!sel) return;
+      var current = sel.value;
+      var html = '<option value="">Select customer…</option>';
+      for (var i = 0; i < cache.customers.length; i++) {
+        var c = cache.customers[i];
+        html += '<option value="' + esc(c.id) + '">' + esc(fullName(c)) +
+                (c.account_number ? ' · ' + esc(c.account_number) : '') + '</option>';
+      }
+      sel.innerHTML = html;
+      if (current) sel.value = current;
+    }
+
+    function fillUserDropdown() {
+      var sel = document.getElementById('ticketAssignedTo');
+      if (!sel) return;
+      var current = sel.value;
+      var html = '<option value="">Unassigned</option>';
+      for (var i = 0; i < cache.users.length; i++) {
+        var u = cache.users[i];
+        html += '<option value="' + esc(u.id) + '">' + esc(fullName(u)) + '</option>';
+      }
+      sel.innerHTML = html;
+      if (current) sel.value = current;
+    }
+
+    async function prepareTicketForm() {
+      if (!cache.customers.length) await loadCustomers(true);
+      if (!cache.users.length) await loadUsers(true);
+      fillCustomerDropdown();
+      fillUserDropdown();
+    }
+
+    /* ================================================================
+       TICKETS
+       ================================================================ */
+    async function loadTickets() {
+      var host = document.getElementById('ticketsContent');
+      host.innerHTML = '<div class="card">' + skeletonRows(6) + '</div>';
+      try {
+        var res = await apiCall('/tickets');
+        if (!res.ok) throw new Error(apiError(res, 'Failed to load tickets'));
+        var list = res.data.tickets || res.data || [];
+        cache.tickets = Array.isArray(list) ? list : [];
+        if (!cache.customers.length) await loadCustomers(true);
+        if (!cache.users.length) await loadUsers(true);
+        renderTickets();
+      } catch (err) {
+        host.innerHTML = emptyState('⚠️', 'Could not load tickets', err.message,
+          '<button class="btn btn-ghost btn-sm" onclick="loadTickets()">Try again</button>');
+        if (err.message.indexOf('Session expired') !== -1) logout();
+      }
+    }
+
+    function onTicketFilter() {
+      ui.ticketQ = (document.getElementById('ticketSearch').value || '').toLowerCase();
+      ui.ticketStatus = document.getElementById('ticketStatusFilter').value;
+      ui.ticketPriority = document.getElementById('ticketPriorityFilter').value;
+      renderTickets();
+    }
+
+    function filteredTickets() {
+      var out = [];
+      for (var i = 0; i < cache.tickets.length; i++) {
+        var t = cache.tickets[i];
+        if (ui.ticketStatus !== 'all' && t.status !== ui.ticketStatus) continue;
+        if (ui.ticketPriority !== 'all' && t.priority !== ui.ticketPriority) continue;
+        if (ui.ticketQ) {
+          var hay = [
+            t.ticket_number, t.title, t.description,
+            customerNameOf(t.customer_id), userNameOf(t.assigned_to_user_id)
+          ].join(' ').toLowerCase();
+          if (hay.indexOf(ui.ticketQ) === -1) continue;
+        }
+        out.push(t);
+      }
+      out.sort(function (a, b) {
+        var pa = PRIORITY_ORDER.hasOwnProperty(a.priority) ? PRIORITY_ORDER[a.priority] : 99;
+        var pb = PRIORITY_ORDER.hasOwnProperty(b.priority) ? PRIORITY_ORDER[b.priority] : 99;
+        if (pa !== pb) return pa - pb;
+        return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+      });
+      return out;
+    }
+
+    function renderTickets() {
+      var host = document.getElementById('ticketsContent');
+      var rows = filteredTickets();
+
+      if (!cache.tickets.length) {
+        host.innerHTML = emptyState('🎫', 'No tickets yet', 'Create your first ticket to get started.',
+          '<button class="btn btn-primary btn-sm" onclick="navigate(\'newTicket\')">＋ New ticket</button>');
+        return;
+      }
+      if (!rows.length) {
+        host.innerHTML = emptyState('🔍', 'No matching tickets', 'Try adjusting your search or filters.',
+          '<button class="btn btn-ghost btn-sm" onclick="clearTicketFilters()">Clear filters</button>');
+        return;
+      }
+
+      var html = '<div class="table-wrap"><table><thead><tr>' +
+        '<th>Ticket</th><th>Subject</th><th>Customer</th><th>Assignee</th>' +
+        '<th>Priority</th><th>Status</th><th>Created</th>' +
+        '</tr></thead><tbody>';
+
+      for (var i = 0; i < rows.length; i++) {
+        var t = rows[i];
+        html += '<tr onclick="openTicketModal(\'' + esc(t.id) + '\')" title="View ticket details">' +
+          '<td class="cell-strong whitespace-nowrap">' + esc(t.ticket_number || ('#' + t.id)) + '</td>' +
+          '<td><div class="cell-strong">' + esc(t.title) + '</div>' +
+            '<div class="cell-muted">' + esc(timeAgo(t.created_at)) + '</div></td>' +
+          '<td class="whitespace-nowrap">' + esc(customerNameOf(t.customer_id)) + '</td>' +
+          '<td class="cell-muted whitespace-nowrap">' + esc(userNameOf(t.assigned_to_user_id)) + '</td>' +
+          '<td>' + priorityBadge(t.priority) + '</td>' +
+          '<td>' + statusBadge(t.status) + '</td>' +
+          '<td class="cell-muted whitespace-nowrap" title="' + esc(formatDateTime(t.created_at)) + '">' +
+            esc(timeAgo(t.created_at)) + '</td>' +
+        '</tr>';
+      }
+      host.innerHTML = html + '</tbody></table></div>' +
+        '<div style="margin-top:12px; font-size:12px; color:var(--text-muted);">Showing ' +
+        rows.length + ' of ' + cache.tickets.length + ' tickets</div>';
+    }
+
+    function clearTicketFilters() {
+      document.getElementById('ticketSearch').value = '';
+      document.getElementById('ticketStatusFilter').value = 'all';
+      document.getElementById('ticketPriorityFilter').value = 'all';
+      ui.ticketQ = ''; ui.ticketStatus = 'all'; ui.ticketPriority = 'all';
+      renderTickets();
+    }
+
+    async function handleCreateTicket(e) {
+      e.preventDefault();
+      var payload = {
+        customer_id: document.getElementById('ticketCustomer').value,
+        title: document.getElementById('ticketTitle').value.trim(),
+        description: document.getElementById('ticketDescription').value.trim(),
+        priority: document.getElementById('ticketPriority').value
+      };
+      var assigned = document.getElementById('ticketAssignedTo').value;
+      if (assigned) payload.assigned_to_user_id = assigned;
+
+      if (!payload.customer_id || !payload.title || !payload.description) {
+        toast('Please fill in all required fields', 'error');
+        return;
+      }
+
+      var btn = e.target.querySelector('button[type="submit"]');
+      btn.disabled = true; btn.textContent = 'Creating…';
+      try {
+        var res = await apiCall('/tickets', { method: 'POST', body: payload });
+        if (res.ok) {
+          var num = (res.data.ticket && res.data.ticket.ticket_number) || (res.data.ticket && res.data.ticket.id) || '';
+          toast('Ticket ' + num + ' created successfully', 'success');
+          e.target.reset();
+          cache.tickets = [];
+          navigate('tickets');
+          loadTickets();
+        } else {
+          toast(apiError(res, 'Failed to create ticket'), 'error');
+          if (res.status === 401) logout();
+        }
+      } catch (err) {
+        toast('Network error — could not create ticket', 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = 'Create ticket';
+      }
+    }
+
+    /* ---------- Ticket detail modal ---------- */
+    async function openTicketModal(id) {
+      ui.currentTicketId = id;
+      openModal(ticketModalSkeleton(), true);
+
+      try {
+        var res = await apiCall('/tickets/' + encodeURIComponent(id));
+        if (!res.ok) {
+          closeModal();
+          toast(apiError(res, 'Failed to open ticket'), 'error');
+          if (res.status === 401) logout();
+          return;
+        }
+        var ticket = res.data.ticket || res.data;
+        if (!cache.customers.length) await loadCustomers(true);
+        if (!cache.users.length) await loadUsers(true);
+        renderTicketModal(ticket);
+        loadComments(id);
+      } catch (err) {
+        closeModal();
+        toast('Network error — could not open ticket', 'error');
+      }
+    }
+
+    function ticketModalSkeleton() {
+      return '<div class="modal-head"><div><div class="sk sk-line" style="width:160px;height:18px;"></div>' +
+        '<div class="sk sk-line" style="width:230px;height:11px;margin-top:8px;"></div></div></div>' +
+        '<div class="modal-body">' + skeletonRows(6) + '</div>';
+    }
+
+    function renderTicketModal(t) {
+      var num = t.ticket_number || ('#' + t.id);
+      var html =
+        '<div class="modal-head">' +
+          '<div>' +
+            '<h3>' + esc(t.title) + '</h3>' +
+            '<div class="sub">' + esc(num) + ' · opened ' + esc(timeAgo(t.created_at)) + '</div>' +
+          '</div>' +
+          '<button class="modal-x" onclick="closeModal()" aria-label="Close">✕</button>' +
+        '</div>' +
+        '<div class="modal-body">' +
+          '<div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">' +
+            statusBadge(t.status) + priorityBadge(t.priority) +
+            '<span class="badge badge-default">' + esc(customerNameOf(t.customer_id)) + '</span>' +
+          '</div>' +
+          '<div class="detail-meta">' +
+            '<div class="m"><div class="k">Customer</div><div class="v">' + esc(customerNameOf(t.customer_id)) + '</div></div>' +
+            '<div class="m"><div class="k">Account</div><div class="v">' +
+              esc((cache.customerById[t.customer_id] || {}).account_number || '—') + '</div></div>' +
+            '<div class="m"><div class="k">Assignee</div><div class="v">' + esc(userNameOf(t.assigned_to_user_id)) + '</div></div>' +
+            '<div class="m"><div class="k">Created</div><div class="v" title="' + esc(formatDateTime(t.created_at)) + '">' +
+              esc(timeAgo(t.created_at)) + '</div></div>' +
+          '</div>' +
+          '<div class="detail-section"><h4>Description</h4>' +
+            '<div class="detail-desc">' + esc(t.description) + '</div></div>' +
+          '<div class="detail-section"><h4>Comments</h4><div id="commentList">' +
+            '<div class="sk sk-line" style="width:70%;"></div><div class="sk sk-line" style="width:55%;"></div>' +
+          '</div></div>' +
+          '<div class="detail-section">' +
+            '<textarea id="commentBox" placeholder="Write a comment…" style="min-height:80px;"></textarea>' +
+            '<div class="form-actions"><button class="btn btn-primary btn-sm" onclick="addComment()">Post comment</button></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="modal-foot">' +
+          '<button class="btn btn-danger btn-sm" onclick="deleteTicket()">Delete ticket</button>' +
+          '<button class="btn btn-ghost btn-sm" onclick="closeModal()">Close</button>' +
+        '</div>';
+
+      openModal(html, true);
+
+      // Status change
+      var statusSel = document.getElementById('ticketStatusSel');
+      if (statusSel) {
+        statusSel.value = t.status || 'open';
+        statusSel.onchange = function () { changeTicketStatus(t.id, statusSel.value); };
+      }
+      // Assign
+      var assignSel = document.getElementById('ticketAssignSel');
+      if (assignSel) {
+        var opts = '<option value="">Unassigned</option>';
+        for (var i = 0; i < cache.users.length; i++) {
+          var u = cache.users[i];
+          opts += '<option value="' + esc(u.id) + '"' +
+            (String(u.id) === String(t.assigned_to_user_id) ? ' selected' : '') + '>' +
+            esc(fullName(u)) + '</option>';
+        }
+        assignSel.innerHTML = opts;
+        assignSel.onchange = function () { assignTicket(t.id, assignSel.value || null); };
+      }
+    }
+
+    async function loadComments(ticketId) {
+      try {
+        var res = await apiCall('/tickets/' + encodeURIComponent(ticketId) + '/comments');
+        var list = res.ok ? (res.data.comments || res.data || []) : [];
+        renderComments(Array.isArray(list) ? list : []);
+      } catch (e) {
+        renderComments([]);
+      }
+    }
+
+    function renderComments(comments) {
+      var host = document.getElementById('commentList');
+      if (!host) return;
+      if (!comments.length) {
+        host.innerHTML = '<div class="cell-muted" style="padding:10px 0;">No comments yet — be the first to reply.</div>';
+        return;
+      }
+      var html = '';
+      for (var i = 0; i < comments.length; i++) {
+        var c = comments[i];
+        var who = fullName(c) && c.first_name ? c : (c.user || {});
+        html += '<div class="comment">' +
+          '<div class="c-avatar">' + esc(initials(who.first_name, who.last_name)) + '</div>' +
+          '<div class="c-bubble">' +
+            '<div class="c-meta"><strong>' + esc(fullName(who)) + '</strong> · ' +
+              esc(timeAgo(c.created_at)) + '</div>' +
+            '<div class="c-text">' + esc(c.comment || c.content || c.body || '') + '</div>' +
+          '</div></div>';
+      }
+      host.innerHTML = html;
+    }
+
+    async function addComment() {
+      var box = document.getElementById('commentBox');
+      var text = (box.value || '').trim();
+      if (!text) { toast('Write a comment first', 'error'); return; }
+      var btn = box.parentNode.querySelector('button');
+      btn.disabled = true; btn.textContent = 'Posting…';
+      try {
+        var res = await apiCall('/tickets/' + encodeURIComponent(ui.currentTicketId) + '/comments',
+          { method: 'POST', body: { comment: text } });
+        if (res.ok) {
+          box.value = '';
+          toast('Comment posted', 'success');
+          loadComments(ui.currentTicketId);
+        } else {
+          toast(apiError(res, 'Failed to post comment'), 'error');
+          if (res.status === 401) logout();
+        }
+      } catch (e) {
+        toast('Network error — could not post comment', 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = 'Post comment';
+      }
+    }
+
+    async function changeTicketStatus(ticketId, status) {
+      try {
+        var res = await apiCall('/tickets/' + encodeURIComponent(ticketId),
+          { method: 'PATCH', body: { status: status } });
+        if (res.ok) {
+          toast('Status updated to ' + (STATUS_LABELS[status] || status), 'success');
+          refreshTicketInCache(ticketId);
+        } else {
+          toast(apiError(res, 'Failed to update status'), 'error');
+          if (res.status === 401) logout();
+        }
+      } catch (e) {
+        toast('Network error — could not update status', 'error');
+      }
+    }
+
+    async function assignTicket(ticketId, userId) {
+      try {
+        var res = await apiCall('/tickets/' + encodeURIComponent(ticketId) + '/assign',
+          { method: 'PATCH', body: { assigned_to_user_id: userId } });
+        if (res.ok) {
+          toast(userId ? 'Ticket assigned' : 'Ticket unassigned', 'success');
+          refreshTicketInCache(ticketId);
+        } else {
+          toast(apiError(res, 'Failed to assign ticket'), 'error');
+          if (res.status === 401) logout();
+        }
+      } catch (e) {
+        toast('Network error — could not assign ticket', 'error');
+      }
+    }
+
+    async function refreshTicketInCache(ticketId) {
+      try {
+        var res = await apiCall('/tickets/' + encodeURIComponent(ticketId));
+        if (!res.ok) return;
+        var t = res.data.ticket || res.data;
+        for (var i = 0; i < cache.tickets.length; i++) {
+          if (String(cache.tickets[i].id) === String(t.id)) { cache.tickets[i] = t; break; }
+        }
+        if (ui.page === 'tickets') renderTickets();
+        renderTicketModal(t);
+      } catch (e) { /* non-fatal */ }
+    }
+
+    function deleteTicket() {
+      var id = ui.currentTicketId;
+      if (!id) return;
+      showConfirm({
+        title: 'Delete this ticket?',
+        sub: 'The ticket and its comments will be permanently removed',
+        message: 'This removes the ticket from the system. This action cannot be undone.',
+        confirmText: 'Delete ticket',
+        danger: true,
+        onConfirm: function () {
+          apiCall('/tickets/' + encodeURIComponent(id), { method: 'DELETE' })
+            .then(function (res) {
+              if (res.ok) {
+                toast('Ticket deleted', 'success');
+                cache.tickets = cache.tickets.filter(function (t) { return String(t.id) !== String(id); });
+                closeModal();
+                if (ui.page === 'tickets') renderTickets();
+              } else {
+                toast(apiError(res, 'Failed to delete ticket'), 'error');
+                if (res.status === 401) logout();
+              }
+            })
+            .catch(function () { toast('Network error — could not delete ticket', 'error'); });
+        }
+      });
+    }
+
+    /* ================================================================
+       CUSTOMERS
+       ================================================================ */
+    function onCustomerFilter() {
+      ui.customerQ = (document.getElementById('customerSearch').value || '').toLowerCase();
+      renderCustomers();
+    }
+
+    function renderCustomers() {
+      var host = document.getElementById('customersContent');
+      var q = ui.customerQ;
+      var rows = cache.customers.filter(function (c) {
+        if (!q) return true;
+        var hay = [c.first_name, c.last_name, c.account_number, c.email, c.account_type]
+          .join(' ').toLowerCase();
+        return hay.indexOf(q) !== -1;
+      });
+
+      if (!cache.customers.length) {
+        host.innerHTML = emptyState('👥', 'No customers yet', 'Add your first customer account to start logging tickets.',
+          '<button class="btn btn-primary btn-sm" onclick="openCustomerForm()">＋ New customer</button>');
+        return;
+      }
+      if (!rows.length) {
+        host.innerHTML = emptyState('🔍', 'No matching customers', 'Try a different name or account number.',
+          '<button class="btn btn-ghost btn-sm" onclick="document.getElementById(\'customerSearch\').value=\'\'; onCustomerFilter()">Clear search</button>');
+        return;
+      }
+
+      var html = '<div class="table-wrap"><table><thead><tr>' +
+        '<th>Account</th><th>Name</th><th>Email</th><th>Type</th><th>Since</th><th style="text-align:right;">Actions</th>' +
+        '</tr></thead><tbody>';
+      for (var i = 0; i < rows.length; i++) {
+        var c = rows[i];
+        html += '<tr class="no-hover">' +
+          '<td class="cell-strong whitespace-nowrap">' + esc(c.account_number || '—') + '</td>' +
+          '<td class="whitespace-nowrap">' + esc(fullName(c)) + '</td>' +
+          '<td class="cell-muted">' + esc(c.email || '—') + '</td>' +
+          '<td class="whitespace-nowrap">' + esc((c.account_type || '—').replace(/_/g, ' ')) + '</td>' +
+          '<td class="cell-muted whitespace-nowrap" title="' + esc(formatDateTime(c.created_at)) + '">' +
+            esc(timeAgo(c.created_at)) + '</td>' +
+          '<td style="text-align:right;">' +
+            '<button class="btn btn-danger btn-sm" onclick="requestDeleteCustomer(\'' + esc(c.id) + '\')">Delete</button>' +
+          '</td></tr>';
+      }
+      host.innerHTML = html + '</tbody></table></div>' +
+        '<div style="margin-top:12px; font-size:12px; color:var(--text-muted);">Showing ' +
+        rows.length + ' of ' + cache.customers.length + ' customers</div>';
+    }
+
+    function openCustomerForm() {
+      document.getElementById('customerFormCard').classList.remove('hide');
+      setTimeout(function () { document.getElementById('customerAccount').focus(); }, 50);
+    }
+
+    function closeCustomerForm() {
+      document.getElementById('customerFormCard').classList.add('hide');
+      var f = document.querySelector('#customerFormCard form');
+      if (f) f.reset();
+    }
+
+    async function handleCreateCustomer(e) {
+      e.preventDefault();
+      var payload = {
+        account_number: document.getElementById('customerAccount').value.trim(),
+        first_name: document.getElementById('customerFirstName').value.trim(),
+        last_name: document.getElementById('customerLastName').value.trim()
+      };
+      var email = document.getElementById('customerEmail').value.trim();
+      if (email) payload.email = email;
+      payload.account_type = document.getElementById('customerAccountType').value;
+
+      if (!payload.account_number || !payload.first_name || !payload.last_name) {
+        toast('Please fill in all required fields', 'error');
+        return;
+      }
+
+      var btn = e.target.querySelector('button[type="submit"]');
+      btn.disabled = true; btn.textContent = 'Creating…';
+      try {
+        var res = await apiCall('/customers', { method: 'POST', body: payload });
+        if (res.ok) {
+          toast('Customer ' + payload.account_number + ' created', 'success');
+          closeCustomerForm();
+          await loadCustomers();
+        } else {
+          toast(apiError(res, 'Failed to create customer'), 'error');
+          if (res.status === 401) logout();
+        }
+      } catch (err) {
+        toast('Network error — could not create customer', 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = 'Create customer';
+      }
+    }
+
+    function requestDeleteCustomer(id) {
+      var c = cache.customerById[id];
+      var label = c ? (fullName(c) + ' · ' + (c.account_number || '')) : 'this customer';
+
+      showConfirm({
+        title: 'Delete customer?',
+        sub: label,
+        message: 'The customer account will be removed from the system.',
+        confirmText: 'Delete customer',
+        danger: true,
+        onConfirm: function (force) { doDeleteCustomer(id, force); }
+      });
+    }
+
+    async function doDeleteCustomer(id, force) {
+      var endpoint = '/customers/' + encodeURIComponent(id);
+      if (force) endpoint += '?force=true';
+      try {
+        var res = await apiCall(endpoint, { method: 'DELETE' });
+        if (res.ok) {
+          toast(force ? 'Customer and related tickets deleted' : 'Customer deleted', 'success');
+          await loadCustomers();
+          if (ui.page === 'tickets') loadTickets();
+        } else if (res.status === 409) {
+          // Customer has tickets -> offer force delete with an explicit toggle.
+          var msg = (res.data && res.data.error) || 'Customer has existing tickets';
+          var count = (msg.match(/(\d+)/) || [])[1];
+          showConfirm({
+            title: 'Customer has tickets',
+            sub: 'Deletion blocked to protect ticket history',
+            message: '<strong>' + esc(msg) + '</strong><br>Deleting this customer requires removing the linked tickets as well.',
+            confirmText: 'Delete anyway',
+            danger: true,
+            extra: '<label class="check-line">' +
+              '<input type="checkbox" id="forceDeleteCheck">' +
+              '<span>I understand — permanently delete the customer <strong>and its ' +
+                esc(count || 'all') + ' ticket(s)</strong>.</span></label>',
+            onConfirm: function (checked) { doDeleteCustomer(id, true); }
+          });
+        } else {
+          toast(apiError(res, 'Failed to delete customer'), 'error');
+          if (res.status === 401) logout();
+        }
+      } catch (err) {
+        toast('Network error — could not delete customer', 'error');
+      }
+    }
+
+    /* ================================================================
+       USERS (admin only)
+       ================================================================ */
+    function onUserFilter() {
+      ui.userQ = (document.getElementById('userSearch').value || '').toLowerCase();
+      renderUsers();
+    }
+
+    function renderUsers() {
+      if (!isAdmin()) return;
+      var host = document.getElementById('usersContent');
+      var q = ui.userQ;
+      var rows = cache.users.filter(function (u) {
+        if (!q) return true;
+        var hay = [u.first_name, u.last_name, u.email, u.role].join(' ').toLowerCase();
+        return hay.indexOf(q) !== -1;
+      });
+
+      if (!cache.users.length) {
+        host.innerHTML = emptyState('🛡️', 'No users yet', 'Create operator accounts to give your team access.',
+          '<button class="btn btn-primary btn-sm" onclick="openUserForm()">＋ New user</button>');
+        return;
+      }
+      if (!rows.length) {
+        host.innerHTML = emptyState('🔍', 'No matching users', 'Try a different name or email.',
+          '<button class="btn btn-ghost btn-sm" onclick="document.getElementById(\'userSearch\').value=\'\'; onUserFilter()">Clear search</button>');
+        return;
+      }
+
+      var html = '<div class="table-wrap"><table><thead><tr>' +
+        '<th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Joined</th><th style="text-align:right;">Actions</th>' +
+        '</tr></thead><tbody>';
+      for (var i = 0; i < rows.length; i++) {
+        var u = rows[i];
+        var isSelf = currentUser && String(u.id) === String(currentUser.id);
+        html += '<tr class="no-hover">' +
+          '<td class="whitespace-nowrap">' + esc(fullName(u)) +
+            (isSelf ? ' <span class="badge badge-default">You</span>' : '') + '</td>' +
+          '<td class="cell-muted">' + esc(u.email || '—') + '</td>' +
+          '<td>' + roleBadge(u.role) + '</td>' +
+          '<td>' + (u.is_active === false
+            ? '<span class="badge badge-cancelled">Inactive</span>'
+            : '<span class="badge badge-closed">Active</span>') + '</td>' +
+          '<td class="cell-muted whitespace-nowrap" title="' + esc(formatDateTime(u.created_at)) + '">' +
+            esc(timeAgo(u.created_at)) + '</td>' +
+          '<td style="text-align:right;">' +
+            '<button class="btn btn-danger btn-sm" onclick="requestDeleteUser(\'' + esc(u.id) + '\')" ' +
+              (isSelf ? 'disabled title="You cannot delete your own account"' : '') + '>Delete</button>' +
+          '</td></tr>';
+      }
+      host.innerHTML = html + '</tbody></table></div>' +
+        '<div style="margin-top:12px; font-size:12px; color:var(--text-muted);">Showing ' +
+        rows.length + ' of ' + cache.users.length + ' users</div>';
+    }
+
+    function openUserForm() {
+      if (!isAdmin()) { toast('Administrator access required', 'error'); return; }
+      document.getElementById('userFormCard').classList.remove('hide');
+      setTimeout(function () { document.getElementById('userFirstName').focus(); }, 50);
+    }
+
+    function closeUserForm() {
+      document.getElementById('userFormCard').classList.add('hide');
+      var f = document.querySelector('#userFormCard form');
+      if (f) f.reset();
+    }
+
+    async function handleCreateUser(e) {
+      e.preventDefault();
+      if (!isAdmin()) { toast('Administrator access required', 'error'); return; }
+      var payload = {
+        first_name: document.getElementById('userFirstName').value.trim(),
+        last_name: document.getElementById('userLastName').value.trim(),
+        email: document.getElementById('userEmail').value.trim(),
+        password: document.getElementById('userPassword').value,
+        role: document.getElementById('userRole').value
+      };
+      if (!payload.first_name || !payload.last_name || !payload.email || !payload.password) {
+        toast('Please fill in all required fields', 'error');
+        return;
+      }
+
+      var btn = e.target.querySelector('button[type="submit"]');
+      btn.disabled = true; btn.textContent = 'Creating…';
+      try {
+        var res = await apiCall('/users', { method: 'POST', body: payload });
+        if (res.ok) {
+          toast('User ' + payload.email + ' created', 'success');
+          closeUserForm();
+          await loadUsers();
+        } else {
+          toast(apiError(res, 'Failed to create user'), 'error');
+          if (res.status === 401) logout();
+        }
+      } catch (err) {
+        toast('Network error — could not create user', 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = 'Create user';
+      }
+    }
+
+    function requestDeleteUser(id) {
+      var u = cache.userById[id];
+      var label = u ? (fullName(u) + ' · ' + (u.email || '')) : 'this user';
+      showConfirm({
+        title: 'Delete user?',
+        sub: label,
+        message: 'The operator account will be removed and can no longer sign in.',
+        confirmText: 'Delete user',
+        danger: true,
+        onConfirm: function () { doDeleteUser(id); }
+      });
+    }
+
+    async function doDeleteUser(id) {
+      try {
+        var res = await apiCall('/users/' + encodeURIComponent(id), { method: 'DELETE' });
+        if (res.ok) {
+          toast('User deleted', 'success');
+          await loadUsers();
+        } else {
+          toast(apiError(res, 'Failed to delete user'), 'error');
+          if (res.status === 401) logout();
+        }
+      } catch (err) {
+        toast('Network error — could not delete user', 'error');
+      }
+    }
+
+    /* ================================================================
+       BOOT
+       ================================================================ */
+    (async function init() {
+      if (!token) {
+        document.getElementById('loginPage').style.display = '';
+        return;
+      }
+      try { currentUser = JSON.parse(localStorage.getItem('user') || 'null'); } catch (e) { currentUser = null; }
+      await showMainApp();
+    })();
+  </script>
+</body>
+</html>

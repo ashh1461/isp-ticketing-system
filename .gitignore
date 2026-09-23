@@ -1,0 +1,9 @@
+.gitignore:
+node_modules/
+*.env
+.env
+dist/
+.backup/
+certs/*.key
+certs/*.crt
+__pycache__/
