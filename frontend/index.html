@@ -1115,6 +1115,11 @@
       if (raw) {
         try { data = JSON.parse(raw); } catch (e) { data = { error: raw }; }
       }
+      // A hard auth failure on a protected route means the session is dead.
+      // Clear it once instead of rendering a UI that can load nothing.
+      if ((response.status === 401 || response.status === 403) && token && !options._reauth) {
+        logout();
+      }
       return { ok: response.ok, status: response.status, data: data };
     }
 
@@ -1156,6 +1161,11 @@
           toast('Welcome back, ' + ((currentUser.first_name) || currentUser.email), 'success');
           await showMainApp();
         } else {
+          // Clear any dead session so a re-login never resumes a stale token.
+          token = null;
+          currentUser = null;
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
           showLoginError(data.error || data.message || 'Invalid email or password');
         }
       } catch (err) {
@@ -1205,7 +1215,9 @@
           localStorage.setItem('user', JSON.stringify(currentUser));
           return;
         }
-        if (res.status === 401) { logout(); return; }
+        // A hard auth failure (401 invalid/expired, or 403) means the session
+        // is dead. Either way, do not keep a token the server rejects.
+        if (res.status === 401 || res.status === 403) { logout(); return; }
       } catch (e) { /* network hiccup — fall back to stored user */ }
       if (!currentUser) {
         try { currentUser = JSON.parse(localStorage.getItem('user') || 'null'); } catch (e) { currentUser = null; }
@@ -2140,6 +2152,14 @@
         return;
       }
       try { currentUser = JSON.parse(localStorage.getItem('user') || 'null'); } catch (e) { currentUser = null; }
+      // Validate the stored token server-side BEFORE entering the app.
+      // refreshCurrentUser logs out on a hard auth failure, so if we still have
+      // no validated user, show the login page instead of an app that can load nothing.
+      await refreshCurrentUser();
+      if (!token) {
+        document.getElementById('loginPage').style.display = '';
+        return;
+      }
       await showMainApp();
     })();
   </script>

@@ -188,7 +188,9 @@ const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction) 
 
   const decoded = verifyToken(token);
   if (!decoded) {
-    return res.status(403).json({ error: 'Invalid or expired token' });
+    // Invalid/expired token is an AUTHENTICATION failure, not authorization.
+    // Must be 401 so clients can reliably detect "session dead" and log out.
+    return res.status(401).json({ error: 'Invalid or expired token' });
   }
 
   req.userId = decoded.userId;

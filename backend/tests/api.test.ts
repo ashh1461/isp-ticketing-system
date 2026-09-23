@@ -160,7 +160,9 @@ describe('registration security', () => {
       .post('/api/v1/auth/register')
       .set('Authorization', 'Bearer not.a.real.token')
       .send({ ...ADMIN_CRED, email: 'noauth3@isp.local' });
-    expect(res.status).toBe(403);
+    // Invalid/expired is an AUTHENTICATION failure -> 401, so clients can
+    // reliably distinguish "session dead" from "not permitted".
+    expect(res.status).toBe(401);
   });
 
   it('rejects a non-admin token', async () => {
