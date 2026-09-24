@@ -368,6 +368,102 @@ describe('ticket lifecycle', () => {
     expect(after.body.ticket.priority).toBe('critical');
   });
 
+  // G001 — the "cannot edit ticket after creation" defect. The endpoint must
+  // accept a full edit (title + description), not just status/priority.
+  it('edits a ticket title and description after creation', async () => {
+    const created = await request(app)
+      .post('/api/v1/tickets')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        customer_id: customerId,
+        title: 'Original subject',
+        description: 'Original body',
+        priority: 'medium',
+      });
+    expect(created.status).toBe(201);
+    const ticketId = created.body.ticket.id;
+
+    const edited = await request(app)
+      .put(`/api/v1/tickets/${ticketId}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        title: 'Corrected subject',
+        description: 'Corrected body with more detail',
+        priority: 'high',
+        status: 'on_hold',
+      });
+    expect(edited.status).toBe(200);
+    expect(edited.body.ticket.title).toBe('Corrected subject');
+    expect(edited.body.ticket.description).toBe('Corrected body with more detail');
+    expect(edited.body.ticket.priority).toBe('high');
+    expect(edited.body.ticket.status).toBe('on_hold');
+
+    // The edit must survive a read-back and bump updated_at.
+    const after = await request(app)
+      .get(`/api/v1/tickets/${ticketId}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(after.status).toBe(200);
+    expect(after.body.ticket.title).toBe('Corrected subject');
+    expect(after.body.ticket.description).toBe('Corrected body with more detail');
+    expect(after.body.ticket.updated_at).not.toBe(after.body.ticket.created_at);
+  });
+
+  // G001 — input validation: no client trust on enum fields.
+  it('rejects an invalid priority or status on edit', async () => {
+    const created = await request(app)
+      .post('/api/v1/tickets')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        customer_id: customerId,
+        title: 'Validation target',
+        description: 'body',
+      });
+    expect(created.status).toBe(201);
+    const ticketId = created.body.ticket.id;
+
+    const badPriority = await request(app)
+      .put(`/api/v1/tickets/${ticketId}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ priority: 'URGENT' });
+    expect(badPriority.status).toBe(400);
+
+    const badStatus = await request(app)
+      .put(`/api/v1/tickets/${ticketId}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ status: 'waiting' });
+    expect(badStatus.status).toBe(400);
+
+    // Ticket is unchanged after the rejected edits.
+    const after = await request(app)
+      .get(`/api/v1/tickets/${ticketId}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(after.body.ticket.priority).toBe('medium');
+    expect(after.body.ticket.status).toBe('open');
+  });
+
+  it('rejects an empty title on edit', async () => {
+    const created = await request(app)
+      .post('/api/v1/tickets')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        customer_id: customerId,
+        title: 'Keep this title',
+        description: 'body',
+      });
+    expect(created.status).toBe(201);
+
+    const res = await request(app)
+      .put(`/api/v1/tickets/${created.body.ticket.id}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ title: '   ' });
+    expect(res.status).toBe(400);
+
+    const after = await request(app)
+      .get(`/api/v1/tickets/${created.body.ticket.id}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(after.body.ticket.title).toBe('Keep this title');
+  });
+
   it('assigns a ticket', async () => {
     const created = await request(app)
       .post('/api/v1/tickets')

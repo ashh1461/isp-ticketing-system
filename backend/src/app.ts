@@ -92,6 +92,12 @@ interface User {
   created_at: string;
 }
 
+// Canonical ticket enums — the single source of truth used by every route that
+// accepts or returns status/priority, so validation can never drift from the
+// TypeScript union types.
+const TICKET_STATUSES = ['open', 'in_progress', 'on_hold', 'resolved', 'closed'];
+const TICKET_PRIORITIES = ['low', 'medium', 'high', 'critical'];
+
 interface Ticket {
   id: string;
   ticket_number: string;
@@ -451,13 +457,33 @@ app.put('/api/v1/tickets/:id', authenticateToken, async (req: AuthRequest, res: 
       return res.status(404).json({ error: 'Ticket not found' });
     }
 
-    // Update allowed fields
+    // Update allowed fields (validated against the ticket enums — no client trust)
     const { title, description, priority, status } = req.body;
 
-    if (title) ticket.title = title;
-    if (description) ticket.description = description;
-    if (priority) ticket.priority = priority;
-    if (status) ticket.status = status;
+    if (title !== undefined) {
+      if (typeof title !== 'string' || !title.trim()) {
+        return res.status(400).json({ error: 'Title must be a non-empty string' });
+      }
+      ticket.title = title.trim();
+    }
+    if (description !== undefined) {
+      if (typeof description !== 'string') {
+        return res.status(400).json({ error: 'Description must be a string' });
+      }
+      ticket.description = description;
+    }
+    if (priority !== undefined) {
+      if (!TICKET_PRIORITIES.includes(priority)) {
+        return res.status(400).json({ error: `Priority must be one of: ${TICKET_PRIORITIES.join(', ')}` });
+      }
+      ticket.priority = priority;
+    }
+    if (status !== undefined) {
+      if (!TICKET_STATUSES.includes(status)) {
+        return res.status(400).json({ error: `Status must be one of: ${TICKET_STATUSES.join(', ')}` });
+      }
+      ticket.status = status;
+    }
 
     ticket.updated_at = new Date().toISOString();
 

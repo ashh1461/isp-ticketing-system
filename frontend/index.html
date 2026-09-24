@@ -1682,6 +1682,7 @@
     }
 
     function renderTicketModal(t) {
+      editTicket = t;   // G001: keep the current ticket so the edit form can pre-fill
       var num = t.ticket_number || ('#' + t.id);
       var html =
         '<div class="modal-head">' +
@@ -1717,6 +1718,7 @@
         '<div class="modal-foot">' +
           '<button class="btn btn-danger btn-sm" onclick="deleteTicket()">Delete ticket</button>' +
           '<button class="btn btn-ghost btn-sm" onclick="closeModal()">Close</button>' +
+          '<button class="btn btn-primary btn-sm" onclick="openEditTicketForm()">✏️ Edit ticket</button>' +
         '</div>';
 
       openModal(html, true);
@@ -1739,6 +1741,117 @@
         }
         assignSel.innerHTML = opts;
         assignSel.onchange = function () { assignTicket(t.id, assignSel.value || null); };
+      }
+    }
+
+    /* ---------------- Ticket editing (G001) ---------------- */
+
+    // Cache of the ticket currently displayed in the detail modal, so the edit
+    // form can pre-fill without a second round-trip.
+    var editTicket = null;
+
+    function openEditTicketForm() {
+      // editTicket is set by renderTicketModal() whenever the detail modal opens.
+      if (!editTicket) { toast('No ticket loaded to edit', 'error'); return; }
+
+      var html =
+        '<div class="modal-head">' +
+          '<div><h3>Edit ticket</h3>' +
+          '<div class="sub">' + esc(editTicket.ticket_number || ('#' + editTicket.id)) +
+            ' · last updated ' + esc(timeAgo(editTicket.updated_at || editTicket.created_at)) + '</div></div>' +
+          '<button class="modal-x" onclick="cancelEditTicket()" aria-label="Close">✕</button>' +
+        '</div>' +
+        '<div class="modal-body">' +
+          '<div class="form-grid">' +
+            '<div class="form-group">' +
+              '<label for="editTicketTitle">Title <span class="req">*</span></label>' +
+              '<input type="text" id="editTicketTitle" value="' + esc(editTicket.title) + '" required>' +
+            '</div>' +
+            '<div class="form-group">' +
+              '<label for="editTicketPriority">Priority</label>' +
+              '<select id="editTicketPriority">' +
+                priorityOptions(editTicket.priority) +
+              '</select>' +
+            '</div>' +
+          '</div>' +
+          '<div class="form-group">' +
+            '<label for="editTicketDescription">Description</label>' +
+            '<textarea id="editTicketDescription" style="min-height:140px;">' + esc(editTicket.description) + '</textarea>' +
+          '</div>' +
+          '<div class="form-group">' +
+            '<label for="editTicketStatus">Status</label>' +
+            '<select id="editTicketStatus">' +
+              statusOptions(editTicket.status) +
+            '</select>' +
+          '</div>' +
+        '</div>' +
+        '<div class="modal-foot">' +
+          '<button class="btn btn-ghost btn-sm" onclick="cancelEditTicket()">Cancel</button>' +
+          '<button class="btn btn-primary btn-sm" id="editTicketSaveBtn" onclick="saveEditedTicket()">Save changes</button>' +
+        '</div>';
+
+      openModal(html, true);
+    }
+
+    function priorityOptions(selected) {
+      var vals = ['low', 'medium', 'high', 'critical'];
+      var out = '';
+      for (var i = 0; i < vals.length; i++) {
+        out += '<option value="' + vals[i] + '"' +
+          (vals[i] === selected ? ' selected' : '') + '>' +
+          vals[i].charAt(0).toUpperCase() + vals[i].slice(1) + '</option>';
+      }
+      return out;
+    }
+
+    function statusOptions(selected) {
+      var vals = ['open', 'in_progress', 'on_hold', 'resolved', 'closed'];
+      var out = '';
+      for (var i = 0; i < vals.length; i++) {
+        var label = vals[i].replace(/_/g, ' ');
+        out += '<option value="' + vals[i] + '"' +
+          (vals[i] === selected ? ' selected' : '') + '>' +
+          label.charAt(0).toUpperCase() + label.slice(1) + '</option>';
+      }
+      return out;
+    }
+
+    function cancelEditTicket() {
+      if (!editTicket) { closeModal(); return; }
+      renderTicketModal(editTicket);   // back to the read-only detail view
+      loadComments(editTicket.id);
+    }
+
+    async function saveEditedTicket() {
+      if (!editTicket) return;
+      var payload = {
+        title: document.getElementById('editTicketTitle').value.trim(),
+        description: document.getElementById('editTicketDescription').value,
+        priority: document.getElementById('editTicketPriority').value,
+        status: document.getElementById('editTicketStatus').value
+      };
+
+      if (!payload.title) { toast('Title cannot be empty', 'error'); return; }
+
+      var btn = document.getElementById('editTicketSaveBtn');
+      btn.disabled = true; btn.textContent = 'Saving…';
+      try {
+        var res = await apiCall('/tickets/' + encodeURIComponent(editTicket.id),
+          { method: 'PUT', body: payload });
+        if (res.ok) {
+          var updated = res.data.ticket || res.data;
+          toast('Ticket updated successfully', 'success');
+          // refreshTicketInCache re-renders the list AND the detail modal.
+          await refreshTicketInCache(updated.id);
+          loadComments(updated.id);
+        } else {
+          toast(apiError(res, 'Failed to update ticket'), 'error');
+          if (res.status === 401) logout();
+        }
+      } catch (err) {
+        toast('Network error — could not update ticket', 'error');
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Save changes'; }
       }
     }
 
