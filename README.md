@@ -53,10 +53,11 @@ docker compose up -d postgres redis
 # 3. Schema
 docker exec -i ticketing-postgres psql -U ticketing_user -d isp_ticketing < ../DATABASE_SCHEMA.sql
 
-# 4. Env — see SECRETS.txt for what's required
+# 4. Env — required variables (generate your own, don't reuse production)
 export JWT_SECRET=$(openssl rand -hex 32)
-export DB_USER=ticketing_user DB_PASSWORD=... DB_NAME=isp_ticketing
-export REDIS_PASSWORD=...
+export JWT_REFRESH_SECRET=$(openssl rand -hex 32)
+export DB_PASSWORD=$(openssl rand -hex 16)
+export REDIS_PASSWORD=$(openssl rand -hex 16)
 
 # 5. Build + run
 npm run build && npm run start     # :3001
